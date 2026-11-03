@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fracdet"
+version = "0.1.0"
+description = "Bone fracture detection from musculoskeletal X-rays (FracAtlas)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Akinchan Jain" }]
+# Single source of truth for dependencies. Lower bounds only: Kaggle/Colab ship
+# their own CUDA builds of torch, and pinning exact versions here would make pip
+# try to replace them with a multi-GB download.
+dependencies = [
+    "torch>=2.1",
+    "torchvision>=0.16",
+    "timm>=0.9",
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "scikit-learn>=1.3",
+    "pillow>=10.0",
+    "pyyaml>=6.0",
+    "requests>=2.31",
+    "tqdm>=4.66",
+    "matplotlib>=3.7",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4", "ruff>=0.5"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# ---------------------------------------------------------------- tooling ----
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "scripts", "tests"]
+
+[tool.ruff.lint]
+# E/F: pyflakes + pycodestyle errors, I: import sorting, B: bugbear (likely bugs),
+# UP: modern syntax, SIM: simplifications, NPY: numpy-specific pitfalls.
+select = ["E", "F", "I", "B", "UP", "SIM", "NPY"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

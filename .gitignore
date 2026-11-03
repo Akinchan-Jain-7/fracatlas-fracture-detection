@@ -1,0 +1,32 @@
+# --- data & artefacts: never commit (size + licence + reproducibility comes from scripts) ---
+data/
+outputs/
+runs/
+checkpoints/
+*.pt
+*.pth
+*.ckpt
+*.zip
+*.zip.part
+
+# --- python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# --- notebooks / editors / OS ---
+.ipynb_checkpoints/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- secrets ---
+.env
+kaggle.json
