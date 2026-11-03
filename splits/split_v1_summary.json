@@ -1,0 +1,62 @@
+{
+  "n_total": 4083,
+  "n_used": 3917,
+  "excluded": {
+    "duplicate_of": 96,
+    "corrupt": 57,
+    "label_conflict": 13
+  },
+  "splits": {
+    "train": {
+      "n": 2742,
+      "fraction": 0.7,
+      "fractured": 480,
+      "fracture_rate": 0.1751,
+      "fractured_by_region": {
+        "hand": 250,
+        "leg": 142,
+        "mixed": 72,
+        "hip": 8,
+        "shoulder": 8
+      }
+    },
+    "val": {
+      "n": 588,
+      "fraction": 0.1501,
+      "fractured": 105,
+      "fracture_rate": 0.1786,
+      "fractured_by_region": {
+        "hand": 54,
+        "leg": 34,
+        "mixed": 16,
+        "hip": 1
+      }
+    },
+    "test": {
+      "n": 587,
+      "fraction": 0.1499,
+      "fractured": 102,
+      "fracture_rate": 0.1738,
+      "fractured_by_region": {
+        "hand": 54,
+        "leg": 30,
+        "mixed": 15,
+        "shoulder": 2,
+        "hip": 1
+      }
+    }
+  },
+  "config": {
+    "name": "split_v1",
+    "train": 0.7,
+    "val": 0.15,
+    "test": 0.15,
+    "n_folds": 20,
+    "seed": 42,
+    "hash_size": 16,
+    "duplicate_threshold": 11,
+    "group_threshold": 20,
+    "group_consecutive_ids": true
+  },
+  "dataset_csv_md5": "13e0c6679fcbab07f9ae71c69b407581"
+}

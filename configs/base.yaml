@@ -14,6 +14,8 @@ paths:
   data_dir: data/raw
   # Where runs write checkpoints, logs and metrics (gitignored).
   output_dir: outputs
+  # Committed split files: every phase trains and tests on exactly these.
+  splits_dir: splits
 
 data:
   # Figshare article 22363012, version 7, file FracAtlas.zip (CC BY 4.0).
@@ -26,3 +28,16 @@ data:
   # identical stale copies in Non_fractured/. See docs/phase-0-setup.md.
   expected_num_images: 4083
   expected_num_fractured: 719
+
+split:
+  name: split_v1
+  train: 0.70
+  val: 0.15
+  test: 0.15
+  n_folds: 20            # 5% folds; whole folds go to train/val/test
+  seed: 42
+  hash_size: 16          # 16x16 dHash = 256 bits (8x8 collides on X-rays)
+  # Hamming thresholds chosen by viewing real pairs; see docs/phase-1-data.md
+  duplicate_threshold: 11   # same picture -> keep one copy
+  group_threshold: 20       # similar -> same split
+  group_consecutive_ids: true  # likely same-patient views stay together
