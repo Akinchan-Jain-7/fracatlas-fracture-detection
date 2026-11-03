@@ -16,6 +16,7 @@ configs/      YAML experiment configs (every run is defined by a config file)
 src/fracdet/  installable Python package: config, data, models, training, evaluation
 scripts/      command-line entry points (download data, verify data, train, ...)
 notebooks/    thin Kaggle/Colab runners and EDA; no core logic lives in notebooks
+splits/       the committed train/val/test split (identical on every machine)
 tests/        pytest unit tests (run in CI on every push)
 docs/         per-phase design notes and interview Q&A
 app/          FastAPI service + web frontend (Phase 8)
@@ -31,8 +32,16 @@ pip install -e ".[dev]"
 
 python scripts/download_data.py          # ~340 MB from Figshare, checksum-verified
 python scripts/verify_data.py            # checks layout and counts
+python scripts/make_split.py --verify    # rebuilds the split, checks it matches splits/
 pytest                                   # unit tests
 ```
+
+## Progress
+
+| Phase | Status | Notes |
+|---|---|---|
+| 0 Setup | ✅ | [docs](docs/phase-0-setup.md): config, seeding, checksum-verified data, CI |
+| 1 Data | ✅ | [docs](docs/phase-1-data.md): EDA, shortcuts, duplicates, leakage-safe split |
 
 ## Quick start (Kaggle)
 

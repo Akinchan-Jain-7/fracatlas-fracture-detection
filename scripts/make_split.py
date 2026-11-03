@@ -10,6 +10,10 @@ Writes (committed to git, so every machine uses the identical split):
 
 Refuses to overwrite an existing split unless --force: a test set must not
 change silently once results have been reported on it.
+
+    python scripts/make_split.py --verify
+rebuilds the split from the raw data and checks it matches the committed file
+exactly (run it on any new machine, e.g. Kaggle, to prove reproducibility).
 """
 
 from __future__ import annotations
@@ -18,6 +22,8 @@ import argparse
 import json
 import sys
 from pathlib import Path
+
+import pandas as pd
 
 from fracdet.config import load_config
 from fracdet.data.download import md5_of_file
@@ -38,6 +44,9 @@ def main() -> int:
     parser.add_argument("--config", default="configs/base.yaml")
     parser.add_argument("--data-dir", type=Path)
     parser.add_argument("--force", action="store_true", help="overwrite an existing split")
+    parser.add_argument(
+        "--verify", action="store_true", help="rebuild and compare with the committed split"
+    )
     parser.add_argument("--set", nargs="*", default=[], metavar="KEY=VALUE")
     args = parser.parse_args()
 
@@ -46,7 +55,10 @@ def main() -> int:
     split_cfg = SplitConfig.from_dict(cfg["split"])
     out_dir = Path(cfg["paths"]["splits_dir"])
     csv_path = out_dir / f"{cfg['split']['name']}.csv"
-    if csv_path.exists() and not args.force:
+    if args.verify and not csv_path.exists():
+        logger.error("Nothing to verify: %s does not exist", csv_path)
+        return 1
+    if csv_path.exists() and not (args.force or args.verify):
         logger.error("%s exists. Use --force only if no results depend on it.", csv_path)
         return 1
 
@@ -68,6 +80,16 @@ def main() -> int:
     summary = summarize(df)
     summary["config"] = cfg["split"]
     summary["dataset_csv_md5"] = md5_of_file(root / CSV_NAME)
+
+    if args.verify:
+        committed = pd.read_csv(csv_path, keep_default_na=False)
+        cols = ["image_id", "split", "exclude_reason"]
+        same = committed[cols].equals(df[cols].astype(committed[cols].dtypes.to_dict()))
+        print("VERIFY:", "MATCH" if same else "MISMATCH", f"({csv_path})")
+        if not same:
+            diff = (committed["split"] != df["split"]).sum()
+            print(f"{diff} images assigned differently")
+        return 0 if same else 1
 
     out_dir.mkdir(parents=True, exist_ok=True)
     df.to_csv(csv_path, index=False)
