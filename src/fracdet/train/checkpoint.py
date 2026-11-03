@@ -71,14 +71,20 @@ def save_checkpoint(
 
 
 def load_checkpoint(
-    path: str | Path, map_location: str | torch.device = "cpu"
+    path: str | Path, device: str | torch.device = "cpu"
 ) -> tuple[nn.Module, dict[str, Any]]:
-    """Rebuild the model from the checkpoint's own config and load its weights."""
+    """Rebuild the model from the checkpoint's own config, load weights, move to ``device``.
+
+    Note: ``torch.load(map_location=...)`` only places the *saved tensors*; the
+    freshly built model still lives on the CPU until ``.to(device)``. Forgetting
+    that crashed the first GPU run ("HalfTensor input vs FloatTensor weight").
+    """
+    device = torch.device(device)
     # weights_only=False: our own trusted file containing plain dicts/config.
-    ckpt = torch.load(path, map_location=map_location, weights_only=False)
+    ckpt = torch.load(path, map_location=device, weights_only=False)
     if ckpt.get("format_version") != FORMAT_VERSION:
         raise ValueError(f"Unsupported checkpoint format {ckpt.get('format_version')}")
     model = build_model({**ckpt["model_cfg"], "pretrained": False})
     model.load_state_dict(ckpt["model_state"])
-    model.eval()
+    model.to(device).eval()
     return model, ckpt

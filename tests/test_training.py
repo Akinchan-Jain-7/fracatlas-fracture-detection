@@ -126,3 +126,26 @@ def test_fit_never_requests_the_test_split(tmp_path, fake_root, monkeypatch):
     run_dir.mkdir()
     fit_module.fit(_fit_cfg(tmp_path, fake_root), fake_root, run_dir, get_logger("t"))
     assert "test" not in requested and set(requested) == {"train", "val"}
+
+
+def test_load_checkpoint_moves_model_to_requested_device(tmp_path):
+    """Regression: the model must end up on the device asked for, not stay on CPU."""
+    cfg = {"model": {"name": "resnet18", "pretrained": False}}
+    save_checkpoint(tmp_path / "m.pt", build_model(cfg["model"]), cfg, 1, {})
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model, _ = load_checkpoint(tmp_path / "m.pt", device=device)
+    assert {p.device.type for p in model.parameters()} == {device}
+
+
+def test_finalize_run_regenerates_summary_without_training(tmp_path, fake_root):
+    from fracdet.train.fit import finalize_run, fit
+
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    cfg = _fit_cfg(tmp_path, fake_root)
+    first = fit(cfg, fake_root, run_dir, get_logger("t"))
+    (run_dir / "summary.json").unlink()
+    (run_dir / "val_predictions.csv").unlink()
+    again = finalize_run(cfg, fake_root, run_dir, get_logger("t"))
+    assert again["val"] == first["val"] and again["best_epoch"] == first["best_epoch"]
+    assert (run_dir / "summary.json").is_file() and (run_dir / "val_predictions.csv").is_file()

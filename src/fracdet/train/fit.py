@@ -184,29 +184,66 @@ def fit(cfg: dict[str, Any], data_root: str | Path, run_dir: str | Path, log: lo
                 log.info("early stop: no %s gain for %d epochs", select, patience)
                 break
 
-    # Re-evaluate the saved best checkpoint (proves the file reproduces the score).
-    best_model, _ = load_checkpoint(run_dir / "best.pt", map_location=device)
+    log.info("training done in %.1f min; best epoch %d", (time.time() - start) / 60, best_epoch)
+    return finalize_run(cfg, data_root, run_dir, log)
+
+
+def finalize_run(
+    cfg: dict[str, Any], data_root: str | Path, run_dir: str | Path, log: logging.Logger
+) -> dict[str, Any]:
+    """Re-score validation with the saved best.pt and write the run record.
+
+    Separate from the epoch loop so a finished run can be (re)finalised from its
+    files alone, without retraining. ``scripts/finalize_run.py`` does that.
+    Loading from disk (not reusing the in-memory model) proves the checkpoint
+    file itself reproduces the reported score.
+    """
+    run_dir = Path(run_dir)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    t_cfg, debug = cfg["train"], cfg.get("debug", {})
+    amp = bool(t_cfg.get("amp", True)) and device.type == "cuda"
+    channels_last = device.type == "cuda"
+
+    split_csv = Path(cfg["paths"]["splits_dir"]) / f"{cfg['split']['name']}.csv"
+    frames = load_split_frames(data_root, split_csv, TRAIN_SPLITS)
+    n_train = len(_maybe_subsample(frames["train"], debug.get("n_train"), cfg["seed"]))
+    val_df = _maybe_subsample(frames["val"], debug.get("n_val"), cfg["seed"])
+    val_loader = _loader(
+        FracAtlasDataset(val_df, build_transforms(cfg.get("preprocess", {}), train=False)),
+        t_cfg.get("eval_batch_size", t_cfg["batch_size"] * 2), False,
+        t_cfg.get("num_workers", 4), cfg["seed"],
+    )  # fmt: skip
+
+    model, ckpt = load_checkpoint(run_dir / "best.pt", device=device)
     if channels_last:
-        best_model = best_model.to(memory_format=torch.channels_last)
-    pv = predict(best_model, val_loader, criterion, device, amp, channels_last)
+        model = model.to(memory_format=torch.channels_last)
+    pv = predict(model, val_loader, nn.BCEWithLogitsLoss(), device, amp, channels_last)
     best_metrics = binary_metrics(pv["label"], pv["prob"])
+    saved = ckpt["metrics"][t_cfg.get("select_metric", "pr_auc")]
+    rescored = best_metrics[t_cfg.get("select_metric", "pr_auc")]
+    if abs(saved - rescored) > 1e-3:
+        log.warning("re-scored %.4f differs from saved %.4f: non-reproducible?", rescored, saved)
+
     preds = val_df.loc[pv["index"], [c for c in PREDICTION_COLUMNS if c in val_df]].copy()
     preds["prob"] = pv["prob"]
     preds.to_csv(run_dir / "val_predictions.csv", index=False)
 
+    epochs = pd.read_csv(run_dir / "metrics.csv")
     summary = {
         "run_name": cfg.get("run_name", run_dir.name),
         "run_dir": str(run_dir),
-        "best_epoch": best_epoch,
-        "epochs_run": epoch,
-        "select_metric": select,
+        "best_epoch": int(ckpt["epoch"]),
+        "epochs_run": int(epochs["epoch"].max()),
+        "select_metric": t_cfg.get("select_metric", "pr_auc"),
         # NaN (e.g. precision with no positive predictions) -> null: valid JSON
         "val": {k: (None if math.isnan(v) else round(v, 4)) for k, v in best_metrics.items()},
-        "n_train": len(train_df),
+        "n_train": n_train,
         "n_val": len(val_df),
-        "minutes": round((time.time() - start) / 60, 2),
-        "parameters": params["total"],
-        **provenance,
+        "minutes": round(float(epochs["seconds"].sum()) / 60, 2),
+        "parameters": count_parameters(model)["total"],
+        **ckpt["provenance"],
+        "finalized_by": git_info(),
     }
     (run_dir / "summary.json").write_text(json.dumps(summary, indent=2, allow_nan=False) + "\n")
+    log.info("val with best.pt: %s", summary["val"])
     return summary
