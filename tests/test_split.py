@@ -4,6 +4,7 @@ import pytest
 
 from fracdet.data.split import (
     SplitConfig,
+    assign_folds,
     check_split,
     consecutive_run_pairs,
     find_exclusions,
@@ -119,3 +120,35 @@ def test_check_split_catches_straddling_group():
     df.loc[i, "split"], df.loc[j, "split"] = "train", "test"
     with pytest.raises(AssertionError, match="span more than one split"):
         check_split(df)
+
+
+def _fold_input():
+    rng = np.random.default_rng(123)
+    strata = np.array(["0_a", "1_a", "0_b", "1_b"])[rng.integers(0, 4, 40)]
+    groups = rng.integers(0, 15, 40)
+    return strata, groups
+
+
+FOLD_CFG = SplitConfig(n_folds=4, train=0.5, val=0.25, test=0.25, seed=0)
+
+
+def test_assign_folds_keeps_groups_whole_and_balances():
+    strata, groups = _fold_input()
+    fold = assign_folds(strata, groups, FOLD_CFG)
+    for gid in np.unique(groups):
+        assert len(set(fold[groups == gid])) == 1
+    assert set(fold) == {0, 1, 2, 3}
+    sizes = np.bincount(fold)
+    assert sizes.max() - sizes.min() <= 8  # 40 samples, groups of ~3
+
+
+def test_assign_folds_golden_output():
+    """Frozen expected output: catches any change that would silently move the split.
+
+    If this fails after an intentional algorithm change, the committed split must
+    be regenerated, and only before any results depend on it.
+    """
+    strata, groups = _fold_input()
+    expected = [2, 2, 2, 3, 1, 0, 1, 2, 3, 3, 2, 1, 3, 0, 0, 1, 2, 1, 3, 0,
+                0, 1, 0, 1, 3, 2, 3, 1, 2, 1, 0, 0, 3, 2, 3, 1, 3, 0, 0, 0]  # fmt: skip
+    assert assign_folds(strata, groups, FOLD_CFG).tolist() == expected

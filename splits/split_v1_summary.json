@@ -10,38 +10,37 @@
     "train": {
       "n": 2742,
       "fraction": 0.7,
-      "fractured": 480,
-      "fracture_rate": 0.1751,
+      "fractured": 483,
+      "fracture_rate": 0.1761,
       "fractured_by_region": {
         "hand": 250,
-        "leg": 142,
-        "mixed": 72,
-        "hip": 8,
-        "shoulder": 8
+        "leg": 145,
+        "mixed": 71,
+        "shoulder": 10,
+        "hip": 7
       }
     },
     "val": {
-      "n": 588,
-      "fraction": 0.1501,
-      "fractured": 105,
-      "fracture_rate": 0.1786,
+      "n": 586,
+      "fraction": 0.1496,
+      "fractured": 102,
+      "fracture_rate": 0.1741,
       "fractured_by_region": {
         "hand": 54,
-        "leg": 34,
-        "mixed": 16,
-        "hip": 1
+        "leg": 31,
+        "mixed": 15,
+        "hip": 2
       }
     },
     "test": {
-      "n": 587,
-      "fraction": 0.1499,
+      "n": 589,
+      "fraction": 0.1504,
       "fractured": 102,
-      "fracture_rate": 0.1738,
+      "fracture_rate": 0.1732,
       "fractured_by_region": {
         "hand": 54,
         "leg": 30,
-        "mixed": 15,
-        "shoulder": 2,
+        "mixed": 17,
         "hip": 1
       }
     }

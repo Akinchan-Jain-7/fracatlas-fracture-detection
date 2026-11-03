@@ -17,19 +17,18 @@ What this module does:
   every duplicate group whose copies disagree on the label (unknowable truth).
 - Group: near-duplicates (looser threshold) + runs of consecutive IDs with
   the same label and region. A group always lands in one split.
-- Split: StratifiedGroupKFold into ``n_folds`` equal folds, stratified on
-  label x region, then whole folds are assigned to train/val/test.
+- Split: stratified group k-fold (own NumPy implementation, see
+  ``assign_folds``) into ``n_folds`` equal folds, stratified on label x region,
+  then whole folds are assigned to train/val/test.
 """
 
 from __future__ import annotations
 
-import warnings
 from collections.abc import Sequence
 from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import StratifiedGroupKFold
 
 from fracdet.data.duplicates import exact_duplicate_pairs, group_pairs, near_duplicate_pairs
 from fracdet.data.schema import ID_COLUMN
@@ -103,15 +102,53 @@ def find_exclusions(meta: pd.DataFrame, dup_group: np.ndarray, corrupt: np.ndarr
 
 
 def assign_folds(strata: Sequence[str], groups: Sequence[int], cfg: SplitConfig) -> np.ndarray:
-    sgkf = StratifiedGroupKFold(n_splits=cfg.n_folds, shuffle=True, random_state=cfg.seed)
-    fold = np.full(len(strata), -1)
-    with warnings.catch_warnings():
-        # Fractured hip/shoulder have fewer members than folds; sklearn warns,
-        # and we report the achieved per-split balance instead.
-        warnings.filterwarnings("ignore", message="The least populated class")
-        for k, (_, idx) in enumerate(sgkf.split(np.zeros(len(strata)), strata, groups)):
-            fold[idx] = k
-    return fold
+    """Stratified group k-fold: every group in one fold, each fold's class mix balanced.
+
+    Same greedy idea as scikit-learn's StratifiedGroupKFold, written out here
+    because sklearn's output for a fixed seed changed between versions (1.6.1 on
+    Kaggle vs 1.9.1 locally gave 1,805 images a different split). This version
+    uses only NumPy arithmetic, so the same input gives the same folds everywhere.
+
+    Algorithm:
+      1. Count, per group, how many samples it has in each stratum.
+      2. Visit groups in a seeded random order, most class-skewed first (they are
+         hardest to place; random order breaks ties).
+      3. Put each group in the fold that keeps every stratum most evenly spread:
+         minimise the mean (over strata) of the std (over folds) of the fraction
+         of that stratum each fold holds. Ties go to the fold with fewest samples.
+    """
+    classes, y = np.unique(np.asarray(strata), return_inverse=True)
+    group_ids, g = np.unique(np.asarray(groups), return_inverse=True)
+    n_groups, n_classes, k = len(group_ids), len(classes), cfg.n_folds
+
+    counts = np.zeros((n_groups, n_classes))
+    np.add.at(counts, (g, y), 1)
+    class_total = counts.sum(axis=0)
+    share = counts / class_total  # fraction of each stratum a group holds
+
+    rng = np.random.default_rng(cfg.seed)
+    order = rng.permutation(n_groups)
+    order = order[np.argsort(-share[order].std(axis=1), kind="stable")]
+
+    fold_share = np.zeros((k, n_classes))
+    fold_size = np.zeros(k)
+    group_fold = np.empty(n_groups, dtype=int)
+    for gi in order:
+        # std over folds if this group joined fold f, for all f at once:
+        # only row f changes, so update the column sums and sums of squares.
+        s = fold_share.sum(axis=0)
+        q = (fold_share**2).sum(axis=0)
+        new_row = fold_share + share[gi]
+        s_new = s - fold_share + new_row
+        q_new = q - fold_share**2 + new_row**2
+        var = np.maximum(q_new / k - (s_new / k) ** 2, 0.0)
+        score = np.sqrt(var).mean(axis=1)
+        best = np.flatnonzero(np.isclose(score, score.min(), rtol=0, atol=1e-12))
+        f = best[np.argmin(fold_size[best])]
+        group_fold[gi] = f
+        fold_share[f] += share[gi]
+        fold_size[f] += counts[gi].sum()
+    return group_fold[g]
 
 
 def make_split(

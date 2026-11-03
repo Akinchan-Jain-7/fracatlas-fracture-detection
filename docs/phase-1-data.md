@@ -4,8 +4,8 @@
 it, then freeze one train/val/test split that every phase uses.
 
 **Outcome:** `splits/split_v1.csv`: 3,917 usable images split 70/15/15
-(2,742 / 588 / 587) with a near-identical fracture rate in each part
-(17.5% / 17.9% / 17.4%). 166 images excluded, each with a recorded reason.
+(2,742 / 586 / 589) with a near-identical fracture rate in each part
+(17.6% / 17.4% / 17.3%). 166 images excluded, each with a recorded reason.
 
 All numbers below come from the Figshare v7 archive (MD5
 `fe9da2c7c285915ebee69dfdab8fd396`), run on 2026-11-03.
@@ -20,7 +20,7 @@ All numbers below come from the Figshare v7 archive (MD5
 | `src/fracdet/data/metadata.py` | `load_metadata(root)`: one clean row per image, with the label from the CSV, the path from the matching label folder, and readable `region` / `view` keys. Every later phase starts here. |
 | `src/fracdet/data/integrity.py` | Finds files that don't fully decode (truncated JPEGs). |
 | `src/fracdet/data/duplicates.py` | MD5 exact duplicates; 256-bit dHash near-duplicates; chunked Hamming distances; union-find grouping. |
-| `src/fracdet/data/split.py` | Exclusions → groups → `StratifiedGroupKFold` → 70/15/15; `check_split` enforces the leakage rules. |
+| `src/fracdet/data/split.py` | Exclusions → groups → stratified group folds (own implementation) → 70/15/15; `check_split` enforces the leakage rules. |
 | `src/fracdet/data/eda.py` | EDA statistics as plain data (unit-tested). |
 | `scripts/make_split.py` | Builds the split; `--verify` rebuilds and checks it matches the committed file. |
 | `scripts/eda.py` | Writes `summary.json` and the four figures below. |
@@ -46,9 +46,10 @@ All numbers below come from the Figshare v7 archive (MD5
 The `region` key: one body part flagged → that part; several parts or the
 `mixed` flag → `mixed`. (`mixed` never appears without two or more parts.)
 **Hip and shoulder have only 10 fractures each.** After splitting, the test set
-holds 1 hip and 2 shoulder fractures, and validation 1 and 0. Per-region results
-for those two would be noise, so later reports show hand, leg and mixed, and pool
-hip + shoulder.
+holds 1 hip and **0 shoulder** fractures, and validation 2 and 0: all 10 shoulder
+fractures sit in a few groups that landed in train. Per-region results for those
+two would be noise (or impossible), so later reports show hand, leg and mixed only,
+and state that **shoulder fracture detection is not tested**.
 
 ---
 
@@ -127,22 +128,40 @@ under-grouping inflates the test score.
    duplicated images. **166 total** (all 59 truncated files are out).
 2. **Group:** near-duplicates (≤ 20) ∪ consecutive same-label-and-region runs →
    1,520 groups, largest 24 images.
-3. **Split:** `StratifiedGroupKFold` makes 20 folds of ~5%, each stratified on
+3. **Split:** stratified group k-fold makes 20 folds of ~5%, each stratified on
    `label × region` and never splitting a group. A seeded shuffle assigns 3 folds
-   to test, 3 to val and 14 to train.
+   to test, 3 to val and 14 to train. The fold assignment is our own NumPy
+   implementation (`assign_folds`), not scikit-learn's. See 4.1 for why.
 4. **Check:** `check_split` raises if a group spans two splits or a duplicate
    group has more than one used image.
 
 | Split | Images | Fractured | Rate | Fractured by region | Hardware + fractured |
 |---|---|---|---|---|---|
-| train | 2,742 | 480 | 17.5% | hand 250, leg 142, mixed 72, hip 8, shoulder 8 | 66 |
-| val | 588 | 105 | 17.9% | hand 54, leg 34, mixed 16, hip 1 | 11 |
-| test | 587 | 102 | 17.4% | hand 54, leg 30, mixed 15, shoulder 2, hip 1 | 16 |
+| train | 2,742 | 483 | 17.6% | hand 250, leg 145, mixed 71, shoulder 10, hip 7 | 70 |
+| val | 586 | 102 | 17.4% | hand 54, leg 31, mixed 15, hip 2 | 12 |
+| test | 589 | 102 | 17.3% | hand 54, leg 30, mixed 17, hip 1 | 11 |
 
 **Why commit the split:** the test set must be identical on Kaggle, this laptop
 and CI, and must never change after results are reported on it.
 `make_split.py` refuses to overwrite without `--force`, and `--verify` proves a
 machine rebuilds it exactly.
+
+### 4.1 Reproducibility bug: same seed, different split
+
+The first `split_v1` used scikit-learn's `StratifiedGroupKFold`. Rebuilding it on
+Kaggle with `make_split.py --verify` gave **1,805 images a different split**. The
+stage-by-stage report showed exclusions, duplicate groups and split groups
+identical (so hashing is stable across Pillow 12.3 and 13.0), and **only the fold
+assignment differed**: scikit-learn 1.6.1 (Kaggle) and 1.9.1 (local) produce
+different folds for the same seed and input.
+
+Fix: `assign_folds` implements the same greedy algorithm in about 40 lines of
+NumPy, and a golden-output test freezes its behaviour. The split was regenerated
+**before any model was trained on it**; from Phase 2 on it is frozen.
+
+Lesson: a random seed only guarantees reproducibility *for the same code*.
+Library upgrades change the code. That's why the split is a committed file, not
+something recomputed at training time, and why `--verify` exists.
 
 **Test-set size and uncertainty:** 102 positives means a measured recall of 80%
 has a 95% confidence interval of roughly ±8 percentage points. Phase 3 reports
@@ -172,7 +191,7 @@ Leakage doesn't throw errors. It just makes numbers look better than reality.
 
 **Q: Why not `train_test_split(stratify=y)`?**
 It treats every image as independent. Here they aren't: copies and same-patient
-views would land on both sides. `StratifiedGroupKFold` keeps whole groups
+views would land on both sides. Stratified *group* k-fold keeps whole groups
 together while still balancing the label × region mix.
 
 **Q: How do you find near-duplicates?**
@@ -185,13 +204,20 @@ by viewing pairs at each distance, and found a natural gap at 12–15.
 All 59 are negatives and decode with grey bars. The model could learn "grey bar
 → healthy" and score well without seeing bone. Losing 1.8% of negatives is cheap.
 
-**Q: Your test set has 587 images. Is that enough?**
+**Q: Your test set has 589 images. Is that enough?**
 For the overall score, yes, with confidence intervals (about ±8 points on recall
-with 102 positives). Per region, no: hip and shoulder have 1–2 test fractures,
-so I don't report them separately.
+with 102 positives). Per region, no: the test set has 1 hip and 0 shoulder
+fractures, so I don't report them separately, and I say shoulder is untested.
+
+**Q: You fixed the seed. How could the split still differ between machines?**
+A seed fixes the random numbers, not the algorithm consuming them. scikit-learn
+1.6.1 and 1.9.1 turn the same seed into different folds. I found it with a
+verify step that rebuilds the split on Kaggle and compares stage by stage, then
+replaced the library call with my own implementation plus a golden-output test.
+And training reads the committed split file, so it never depends on recomputation.
 
 **Q: Why 20 folds?**
-StratifiedGroupKFold produces k equal folds; whole folds then go to splits. With
+The fold step produces k roughly equal folds; whole folds then go to splits. With
 k = 20, each fold is 5%, so 70/15/15 = 14/3/3 folds exactly.
 
 **Q: Why is accuracy a bad metric here?**
