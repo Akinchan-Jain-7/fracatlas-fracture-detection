@@ -17,6 +17,7 @@ from __future__ import annotations
 import csv
 import json
 import logging
+import math
 import time
 from pathlib import Path
 from typing import Any
@@ -199,12 +200,13 @@ def fit(cfg: dict[str, Any], data_root: str | Path, run_dir: str | Path, log: lo
         "best_epoch": best_epoch,
         "epochs_run": epoch,
         "select_metric": select,
-        "val": {k: round(v, 4) for k, v in best_metrics.items()},
+        # NaN (e.g. precision with no positive predictions) -> null: valid JSON
+        "val": {k: (None if math.isnan(v) else round(v, 4)) for k, v in best_metrics.items()},
         "n_train": len(train_df),
         "n_val": len(val_df),
         "minutes": round((time.time() - start) / 60, 2),
         "parameters": params["total"],
         **provenance,
     }
-    (run_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+    (run_dir / "summary.json").write_text(json.dumps(summary, indent=2, allow_nan=False) + "\n")
     return summary
