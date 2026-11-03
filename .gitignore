@@ -1,8 +1,10 @@
 # --- data & artefacts: never commit (size + licence + reproducibility comes from scripts) ---
-data/
-outputs/
-runs/
-checkpoints/
+# Leading "/" anchors to the repo root. Plain "data/" would also ignore the
+# src/fracdet/data/ package (it did, in the first version of this file).
+/data/
+/outputs/
+/runs/
+/checkpoints/
 *.pt
 *.pth
 *.ckpt
@@ -30,3 +32,4 @@ Thumbs.db
 # --- secrets ---
 .env
 kaggle.json
+*.bundle
