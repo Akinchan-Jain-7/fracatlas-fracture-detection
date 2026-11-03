@@ -1,0 +1,40 @@
+# Phase 2 baseline: ImageNet-pretrained ResNet-50, plain BCE (no imbalance handling).
+# Phase 4 compares class weighting / sampling / focal loss against THIS run.
+_base_: base.yaml
+
+run_name: baseline_resnet50
+
+model:
+  name: resnet50.a1_in1k   # timm weights: ResNet-50 trained on ImageNet-1k
+  pretrained: true
+  drop_rate: 0.2           # dropout before the final linear layer
+
+preprocess:
+  image_size: 384          # near native resolution (most images are 373x454)
+
+augment:
+  hflip_p: 0.5
+  rotate_deg: 10.0
+  translate: 0.05
+  scale: [0.9, 1.1]
+  brightness: 0.2
+  contrast: 0.2
+
+train:
+  epochs: 25
+  batch_size: 32
+  eval_batch_size: 64
+  lr: 2.0e-4               # AdamW, whole network fine-tuned
+  weight_decay: 1.0e-2     # not applied to biases / norm layers
+  warmup_epochs: 1
+  min_lr_ratio: 0.01
+  grad_clip: 1.0
+  amp: true                # mixed precision on GPU only
+  num_workers: 4           # Kaggle has 4 CPU cores
+  select_metric: pr_auc    # best epoch = highest validation PR-AUC
+  early_stop_patience: 6
+  deterministic: false
+
+debug:
+  n_train: null            # set e.g. 64 for a quick smoke run
+  n_val: null
