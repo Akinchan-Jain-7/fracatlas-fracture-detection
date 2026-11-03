@@ -15,15 +15,17 @@ from pathlib import Path
 import pandas as pd
 
 from fracdet.data.download import md5_of_file
+from fracdet.data.schema import (
+    ID_COLUMN,
+    LABEL_COLUMN,
+    LABEL_FOLDERS,
+    REGION_COLUMNS,
+    VIEW_COLUMNS,
+    YOLO_DIR,
+)
 from fracdet.paths import MARKER_FILE, find_dataset_root
 
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png"}
-ID_COLUMN = "image_id"
-LABEL_COLUMN = "fractured"
-# Folder each label's images live in (confirmed on the real v7 archive).
-LABEL_FOLDERS = {1: "Fractured", 0: "Non_fractured"}
-YOLO_DIR = Path("Annotations") / "YOLO"
-REGION_COLUMNS = ["hand", "leg", "hip", "shoulder", "mixed"]
 # Columns described in the FracAtlas paper. Missing ones are reported as
 # warnings, not errors, until the real CSV confirms the exact names.
 EXPECTED_COLUMNS = [
@@ -33,9 +35,7 @@ EXPECTED_COLUMNS = [
     "multiscan",
     LABEL_COLUMN,
     "fracture_count",
-    "frontal",
-    "lateral",
-    "oblique",
+    *VIEW_COLUMNS,
 ]
 
 
