@@ -1,0 +1,25 @@
+# Base config. Every experiment config inherits from this via `_base_: base.yaml`
+# and overrides only what it changes, so a diff between two configs is exactly
+# the difference between two experiments.
+
+project:
+  name: fracatlas-fracture-detection
+
+seed: 42
+
+paths:
+  # Folder that contains (or will contain) the extracted FracAtlas dataset.
+  # On Kaggle this is overridden by the FRACDET_DATA_DIR environment variable,
+  # e.g. FRACDET_DATA_DIR=/kaggle/input/fracatlas
+  data_dir: data/raw
+  # Where runs write checkpoints, logs and metrics (gitignored).
+  output_dir: outputs
+
+data:
+  # Figshare article 22363012, version 7, file FracAtlas.zip (CC BY 4.0).
+  source_url: https://ndownloader.figshare.com/files/65518038
+  archive_name: FracAtlas.zip
+  md5: fe9da2c7c285915ebee69dfdab8fd396
+  # Counts from the FracAtlas paper; verify_data.py checks the download against them.
+  expected_num_images: 4083
+  expected_num_fractured: 717
