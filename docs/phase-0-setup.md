@@ -116,6 +116,15 @@ relabelled images, with evidence: checksums and annotation files. Without that
 check, those two images could have ended up in the dataset twice with
 contradictory labels, which is label noise plus possible train/test leakage."*
 
+### Verified environment and data (Kaggle, 2026-11-03, commit `1046939`)
+- Python 3.13.16, torch 2.11.0+cu130, 2× Tesla T4 (14.6 GiB each), 4 CPU cores
+- `verify_data.py`: **PASS**. 4,083 rows, 4,085 files, 719 fractured (17.61%),
+  2 stale copies, regions hand 1,538 / leg 2,273 / hip 338 / shoulder 349 / mixed 398
+- `pytest`: all tests pass, including the torch seeding test that CI skips
+- YOLO files: 719 for fractured **and 3,364 for non-fractured**. So *every* image
+  has a YOLO `.txt` (I had predicted 0 for non-fractured). Those are presumably
+  empty "no box" files. Phase 1 checks that before anything relies on it.
+
 ### A bug the tests caught
 PyYAML implements YAML 1.1, where `3e-4` is **a string**, not a float (YAML 1.1
 needs a dot: `3.0e-4`). An override like `--set train.lr=3e-4` would have
