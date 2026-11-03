@@ -159,6 +159,10 @@ Fix: `assign_folds` implements the same greedy algorithm in about 40 lines of
 NumPy, and a golden-output test freezes its behaviour. The split was regenerated
 **before any model was trained on it**; from Phase 2 on it is frozen.
 
+Verified: `make_split.py --verify` → **MATCH** at every stage both locally
+(Pillow 12.3, scikit-learn 1.9.1, NumPy 2.5.3, pandas 3.0.5) and on Kaggle
+(Pillow 13.0, scikit-learn 1.6.1, NumPy 2.1.3, pandas 2.3.3), commit `17e1b57`.
+
 Lesson: a random seed only guarantees reproducibility *for the same code*.
 Library upgrades change the code. That's why the split is a committed file, not
 something recomputed at training time, and why `--verify` exists.
