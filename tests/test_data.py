@@ -97,3 +97,45 @@ def test_verify_flags_missing_image_and_wrong_counts(tmp_path):
 def test_verify_reports_missing_root(tmp_path):
     report = verify_dataset(tmp_path)
     assert not report.ok and report.root is None
+
+
+def _copy_into_other_folder(root: Path, name: str, content: bytes | None = None) -> None:
+    src = root / "images" / "Fractured" / name
+    dst = root / "images" / "Non_fractured" / name
+    dst.write_bytes(src.read_bytes() if content is None else content)
+
+
+def test_identical_stale_copy_is_warning_not_error(tmp_path):
+    """Mirrors the real v7 archive: a fractured image also left in Non_fractured/."""
+    root = _make_fake_fracatlas(tmp_path / "FracAtlas")
+    _copy_into_other_folder(root, "IMG10000.jpg")
+    report = verify_dataset(tmp_path)
+    assert report.ok, report.errors
+    assert report.stats["stale_copies"] == ["IMG10000.jpg"]
+    assert any("stale copies" in w for w in report.warnings)
+    assert not any("more than one folder" in w for w in report.warnings)
+
+
+def test_conflicting_copies_are_an_error(tmp_path):
+    root = _make_fake_fracatlas(tmp_path / "FracAtlas")
+    _copy_into_other_folder(root, "IMG10000.jpg", content=b"different bytes")
+    report = verify_dataset(tmp_path)
+    assert any("DIFFERENT content" in e for e in report.errors)
+
+
+def test_image_only_in_wrong_folder_is_an_error(tmp_path):
+    root = _make_fake_fracatlas(tmp_path / "FracAtlas")
+    _copy_into_other_folder(root, "IMG10000.jpg")
+    (root / "images" / "Fractured" / "IMG10000.jpg").unlink()
+    report = verify_dataset(tmp_path)
+    assert any("not in the folder matching" in e for e in report.errors)
+
+
+def test_yolo_annotation_coverage(tmp_path):
+    root = _make_fake_fracatlas(tmp_path / "FracAtlas", n_frac=2, n_normal=3)
+    yolo = root / "Annotations" / "YOLO"
+    yolo.mkdir(parents=True)
+    (yolo / "IMG10000.txt").write_text("0 0.5 0.5 0.1 0.1\n")
+    report = verify_dataset(tmp_path)
+    assert report.stats["yolo_files_fractured"] == 1
+    assert report.stats["yolo_files_non_fractured"] == 0

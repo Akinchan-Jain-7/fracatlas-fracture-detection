@@ -85,6 +85,37 @@ container. The notebook is a remote control.
   prints on Kaggle.
 - **ruff** replaces black + isort + flake8 with a single fast tool.
 
+### Finding: the downloaded data didn't match the paper
+The first `verify_data.py` run on Kaggle (Figshare **v7**) **failed**:
+
+| | Paper | v7 archive |
+|---|---|---|
+| CSV rows | 4,083 | 4,083 |
+| Image files | 4,083 | **4,085** |
+| Fractured (CSV) | 717 | **719** |
+
+Investigation: `IMG0003375.jpg` and `IMG0003376.jpg` are labelled `fractured=1`
+(`fracture_count=1`) in the CSV and have YOLO + Pascal VOC boxes, but are present
+in **both** `images/Fractured/` and `images/Non_fractured/` with identical MD5s.
+So they were relabelled as fractured after the paper, and the old copies were
+never removed.
+
+Resolution:
+- **The CSV is the source of truth for labels**, folders are not. Loaders
+  (Phase 1+) must take the label from the CSV and the file from the folder that
+  matches it.
+- `configs/base.yaml` now expects **719**, the count for this exact archive
+  (pinned by its MD5). The paper's 717 stays documented here.
+- `verify_data.py` now checks every image sits in its label's folder. Identical
+  leftovers elsewhere are reported as *stale copies* (warning). A missing
+  label-folder copy, or copies with different bytes, is an error.
+
+Interview angle: *"The dataset I downloaded disagreed with its own paper. My
+verification script caught it before any training, and I traced it to two
+relabelled images, with evidence: checksums and annotation files. Without that
+check, those two images could have ended up in the dataset twice with
+contradictory labels, which is label noise plus possible train/test leakage."*
+
 ### A bug the tests caught
 PyYAML implements YAML 1.1, where `3e-4` is **a string**, not a float (YAML 1.1
 needs a dot: `3.0e-4`). An override like `--set train.lr=3e-4` would have

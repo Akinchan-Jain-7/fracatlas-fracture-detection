@@ -20,6 +20,9 @@ data:
   source_url: https://ndownloader.figshare.com/files/65518038
   archive_name: FracAtlas.zip
   md5: fe9da2c7c285915ebee69dfdab8fd396
-  # Counts from the FracAtlas paper; verify_data.py checks the download against them.
+  # Counts of THIS archive (v7, pinned by the md5 above), confirmed on Kaggle 2026-11-03.
+  # The paper reports 717 fractured; v7's CSV labels 719. The 2 extra
+  # (IMG0003375/6) are labelled fractured, have boxes, and are also left as
+  # identical stale copies in Non_fractured/. See docs/phase-0-setup.md.
   expected_num_images: 4083
-  expected_num_fractured: 717
+  expected_num_fractured: 719
