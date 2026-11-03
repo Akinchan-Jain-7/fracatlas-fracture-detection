@@ -8,7 +8,46 @@ backbones) is measured against this run.
 **The test set is not used in this phase.** All numbers below are on
 **validation** (586 images, 102 fractured).
 
-<!-- RESULTS -->
+## Result (validation, best epoch 16 of 22)
+
+| Metric | Value | For reference |
+|---|---|---|
+| **PR-AUC** | **0.714** | random ranking ≈ 0.174 (the positive rate) |
+| ROC-AUC | 0.869 | random = 0.5 |
+| Recall @ 0.5 | 0.559 (57 / 102 fractures found) | |
+| Precision @ 0.5 | 0.803 (57 of 71 alarms real) | |
+| Specificity @ 0.5 | 0.971 (470 / 484 normals cleared) | |
+| Accuracy @ 0.5 | 0.899 | "always normal" scores 0.826 on this val set |
+
+Run: `configs/baseline_resnet50.yaml`, commit `a579c9f`, Tesla T4 with AMP,
+31 s/epoch, 11.8 min, early-stopped at epoch 22. Re-scoring `best.pt` from disk
+gave the same PR-AUC (0.7136). Records: `results/phase2_baseline_resnet50/`;
+raw files and checkpoint: Kaggle notebook version 1 output.
+
+![Learning curves](figures/phase-2/learning_curves.png)
+
+### What the numbers say
+
+1. **The model has learned real signal.** PR-AUC 0.71 is four times the random
+   baseline, and ROC-AUC 0.87 means a random fractured image outranks a random
+   normal one 87% of the time.
+2. **At threshold 0.5 it misses 44% of fractures.** For a screening tool that's
+   the wrong trade-off: missing a fracture is worse than a false alarm. 0.5
+   is arbitrary for an imbalanced problem. **Phase 3 picks the threshold on
+   validation to reach a target recall**, using `val_predictions.csv`.
+3. **Overfitting starts early.** Training loss falls from 0.57 to 0.08, while
+   validation loss bottoms out around epoch 6–11 and validation PR-AUC
+   plateaus at ~0.70 from epoch 11. Early stopping and best-epoch selection
+   handle it for now. Stronger augmentation, label smoothing or a smaller head
+   LR are Phase 4/5 candidates, compared against this run.
+4. **The validation score is now slightly optimistic.** We picked the best of 22
+   epochs *by* validation PR-AUC, so validation is no longer an unbiased
+   estimate. Epoch-to-epoch swings of ±0.01–0.02 with only 102 positives are
+   mostly noise. That's why the **test set** (untouched) gives the honest
+   number in Phase 3.
+5. **The GPU waits on the CPU.** Kaggle's CPU meter was pegged while the GPU
+   wasn't. Decoding and augmenting on 4 cores is the bottleneck, so caching
+   pre-resized images is a cheap Phase 5 speed-up.
 
 ---
 
@@ -97,3 +136,70 @@ unit test spies on the loader to prove it.
   not valid JSON. Now written as `null`, with `allow_nan=False` as a guard.
 - **The accuracy trap, seen live.** A smoke run of an untrained model scored
   **83% accuracy with 0% recall** by predicting "no fracture" for everything.
+- **The first GPU run crashed after training.** Re-scoring `best.pt` failed with
+  `Input type (torch.cuda.HalfTensor) and weight type (torch.FloatTensor)`.
+  `torch.load(map_location=...)` only places the saved tensors; the freshly
+  built model stays on the CPU until `.to(device)`. CPU-only tests could not see
+  it. Fix: `load_checkpoint(device=...)` moves the model, plus a regression
+  test. Training had already finished and saved `best.pt`, so instead of
+  retraining, `finalize_run` (and `scripts/finalize_run.py`) completes a run
+  from its own files.
+
+---
+
+## 4. How to run
+
+```bash
+python scripts/train.py --config configs/baseline_resnet50.yaml        # GPU, ~12 min on a T4
+python scripts/show_run.py --latest baseline_resnet50                  # epoch table + summary
+python scripts/finalize_run.py --latest baseline_resnet50              # redo the post-training step
+python scripts/plot_learning_curves.py outputs/runs/<run>/metrics.csv curves.png
+```
+
+---
+
+## 5. Interview questions
+
+**Q: Why transfer learning instead of training from scratch?**
+2.7k training images can't teach 23M parameters what edges and textures look
+like. ImageNet pretraining provides those low-level filters; fine-tuning adapts
+them to X-rays. It converges in minutes and generalises better on small data.
+
+**Q: Why one output neuron and BCE, not two with softmax?**
+For two classes they're mathematically equivalent, but one logit is simpler,
+and `BCEWithLogitsLoss` computes sigmoid + log in a numerically stable way. It
+also extends naturally to Phase 4's class weighting (`pos_weight`).
+
+**Q: Your model has 89.9% accuracy. Is it good?**
+Accuracy hides the problem: predicting "normal" for everything already gives
+82.6% on this validation set, and at threshold 0.5 we still miss 44% of
+fractures. I select and report on PR-AUC and recall, and tune the threshold.
+
+**Q: How do you know it's overfitting, and what did you do?**
+Training loss keeps falling while validation loss stops improving and
+validation PR-AUC plateaus (see the learning curves). I keep the checkpoint
+with the best validation PR-AUC and stop after 6 epochs without improvement.
+Next levers: stronger augmentation, regularisation, lower LR for the backbone.
+
+**Q: Why choose the best epoch by PR-AUC instead of validation loss?**
+Loss measures calibration of every prediction; PR-AUC measures how well
+fractures are ranked above normals, which is what the threshold step needs.
+They can disagree: here the lowest validation loss was epoch 11, while the best
+PR-AUC was epoch 16.
+
+**Q: What is mixed precision and why is it safe?**
+Forward and backward passes run in float16 on tensor cores (faster, less
+memory); master weights stay float32. A gradient scaler multiplies the loss so
+small float16 gradients don't round to zero, then divides them back before the
+update.
+
+**Q: Why letterbox instead of resizing to 384×384 directly?**
+Direct resizing stretches a 373×454 image and distorts bone shape, which the
+model then has to learn to undo. Padding keeps the true aspect ratio, and the
+padding is black like the X-ray background.
+
+**Q: A bug only appeared on the GPU. What did you learn?**
+CPU tests can't catch device-placement bugs. I made the post-training step
+recoverable from saved files (no retraining needed), added a regression test,
+and the reload now re-checks that the saved checkpoint reproduces its logged
+score.

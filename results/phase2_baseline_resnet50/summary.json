@@ -1,0 +1,34 @@
+{
+  "run_name": "baseline_resnet50",
+  "run_dir": "outputs/runs/20261103-153336_baseline_resnet50",
+  "best_epoch": 16,
+  "epochs_run": 22,
+  "select_metric": "pr_auc",
+  "val": {
+    "roc_auc": 0.8693,
+    "pr_auc": 0.7136,
+    "recall": 0.5588,
+    "precision": 0.8028,
+    "specificity": 0.9711,
+    "f1": 0.659,
+    "accuracy": 0.8993,
+    "positive_rate": 0.1741
+  },
+  "n_train": 2742,
+  "n_val": 586,
+  "minutes": 11.78,
+  "parameters": 23510081,
+  "fracdet_version": "0.1.0",
+  "torch_version": "2.11.0+cu130",
+  "git": {
+    "commit": "a579c9f26c91409bbf789e46fd506fa956d92536",
+    "dirty": false
+  },
+  "split_name": "split_v1",
+  "split_csv_md5": "99cbcb06a8e71d67f5215fda47fad124",
+  "device": "Tesla T4",
+  "finalized_by": {
+    "commit": "b0f779ce759a73ca54e2573e70826c167ff6bc9b",
+    "dirty": false
+  }
+}

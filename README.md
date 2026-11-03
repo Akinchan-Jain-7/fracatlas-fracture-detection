@@ -42,6 +42,7 @@ pytest                                   # unit tests
 |---|---|---|
 | 0 Setup | ✅ | [docs](docs/phase-0-setup.md): config, seeding, checksum-verified data, CI |
 | 1 Data | ✅ | [docs](docs/phase-1-data.md): EDA, shortcuts, duplicates, leakage-safe split |
+| 2 Baseline | ✅ | [docs](docs/phase-2-baseline.md): ResNet-50 transfer learning; **val PR-AUC 0.714, ROC-AUC 0.869** (test not yet used) |
 
 ## Quick start (Kaggle)
 
