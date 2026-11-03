@@ -39,6 +39,35 @@ from fracdet.seed import seed_everything
 logger = get_logger("make_split")
 
 
+def verify_against(committed: pd.DataFrame, rebuilt: pd.DataFrame, csv_path: Path) -> int:
+    """Compare stage by stage, so a mismatch says WHERE the pipeline diverged."""
+    import numpy
+    import PIL
+    import sklearn
+
+    print(
+        f"versions: pillow {PIL.__version__}, scikit-learn {sklearn.__version__}, "
+        f"numpy {numpy.__version__}, pandas {pd.__version__}"
+    )
+    if committed["image_id"].tolist() != rebuilt["image_id"].tolist():
+        print("VERIFY: MISMATCH - image lists differ (different dataset?)")
+        return 1
+    # Group ids are canonical (smallest member index), so partitions compare directly.
+    stages = [
+        ("exclusions", "exclude_reason"),
+        ("duplicate groups", "dup_group"),
+        ("split groups", "split_group"),
+        ("split assignment", "split"),
+    ]
+    ok = True
+    for name, col in stages:
+        diff = int((committed[col].astype(str) != rebuilt[col].astype(str)).sum())
+        print(f"  {name:17} {'same' if diff == 0 else f'{diff} images differ'}")
+        ok = ok and diff == 0
+    print("VERIFY:", "MATCH" if ok else "MISMATCH", f"({csv_path})")
+    return 0 if ok else 1
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--config", default="configs/base.yaml")
@@ -82,14 +111,7 @@ def main() -> int:
     summary["dataset_csv_md5"] = md5_of_file(root / CSV_NAME)
 
     if args.verify:
-        committed = pd.read_csv(csv_path, keep_default_na=False)
-        cols = ["image_id", "split", "exclude_reason"]
-        same = committed[cols].equals(df[cols].astype(committed[cols].dtypes.to_dict()))
-        print("VERIFY:", "MATCH" if same else "MISMATCH", f"({csv_path})")
-        if not same:
-            diff = (committed["split"] != df["split"]).sum()
-            print(f"{diff} images assigned differently")
-        return 0 if same else 1
+        return verify_against(pd.read_csv(csv_path, keep_default_na=False), df, csv_path)
 
     out_dir.mkdir(parents=True, exist_ok=True)
     df.to_csv(csv_path, index=False)
