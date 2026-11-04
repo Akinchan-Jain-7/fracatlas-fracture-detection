@@ -1,0 +1,165 @@
+{
+  "phase": 3,
+  "purpose": "Operating threshold chosen on validation only, committed before the test run.",
+  "created_at": "2026-11-04T11:37:22+00:00",
+  "created_by": {
+    "commit": "58bb16ed8f52e6aafdebd2b681f9af109938cff4",
+    "dirty": false
+  },
+  "rule": {
+    "name": "max_threshold_at_recall",
+    "target_recall": 0.9,
+    "placement": "midpoint between the k-th highest fracture score and the next lower one"
+  },
+  "threshold": 0.096791435,
+  "gap": [
+    0.09653532,
+    0.09704755
+  ],
+  "model": {
+    "run_name": "p5_convnext_tiny_s44",
+    "best_epoch": 4,
+    "trained_commit": "1f7d7c802ed3ed6419f72ed90431fa94942f24e5",
+    "split_name": "split_v1",
+    "split_csv_md5": "99cbcb06a8e71d67f5215fda47fad124"
+  },
+  "val": {
+    "n": 586,
+    "n_fractured": 102,
+    "pr_auc": 0.825235886463909,
+    "roc_auc": 0.9282733754658888,
+    "at_threshold": {
+      "roc_auc": 0.9282733754658888,
+      "pr_auc": 0.825235886463909,
+      "recall": 0.9019607843137255,
+      "precision": 0.4125560538116592,
+      "specificity": 0.7293388429752066,
+      "f1": 0.5661538461538461,
+      "accuracy": 0.7593856655290102,
+      "positive_rate": 0.17406143344709898,
+      "npv": 0.9724517906336089,
+      "brier": 0.06614012840808083,
+      "tp": 92,
+      "fp": 131,
+      "tn": 353,
+      "fn": 10
+    },
+    "val_predictions_md5": "8c7609f357324795293e192b46030b13"
+  },
+  "reference_points": {
+    "default_0.5": {
+      "threshold": 0.5,
+      "metrics": {
+        "roc_auc": 0.9282733754658888,
+        "pr_auc": 0.825235886463909,
+        "recall": 0.7058823529411765,
+        "precision": 0.7912087912087912,
+        "specificity": 0.9607438016528925,
+        "f1": 0.7461139896373057,
+        "accuracy": 0.9163822525597269,
+        "positive_rate": 0.17406143344709898,
+        "npv": 0.9393939393939394,
+        "brier": 0.06614012840808083,
+        "tp": 72,
+        "fp": 19,
+        "tn": 465,
+        "fn": 30
+      }
+    },
+    "max_f1": {
+      "threshold": 0.6513549,
+      "metrics": {
+        "roc_auc": 0.9282733754658888,
+        "pr_auc": 0.825235886463909,
+        "recall": 0.6764705882352942,
+        "precision": 0.8846153846153846,
+        "specificity": 0.981404958677686,
+        "f1": 0.7666666666666667,
+        "accuracy": 0.9283276450511946,
+        "positive_rate": 0.17406143344709898,
+        "npv": 0.9350393700787402,
+        "brier": 0.06614012840808083,
+        "tp": 69,
+        "fp": 9,
+        "tn": 475,
+        "fn": 33
+      }
+    },
+    "max_youden": {
+      "threshold": 0.1526628,
+      "metrics": {
+        "roc_auc": 0.9282733754658888,
+        "pr_auc": 0.825235886463909,
+        "recall": 0.8627450980392157,
+        "precision": 0.5238095238095238,
+        "specificity": 0.8347107438016529,
+        "f1": 0.6518518518518519,
+        "accuracy": 0.8395904436860068,
+        "positive_rate": 0.17406143344709898,
+        "npv": 0.9665071770334929,
+        "brier": 0.06614012840808083,
+        "tp": 88,
+        "fp": 80,
+        "tn": 404,
+        "fn": 14
+      }
+    }
+  },
+  "recall_table": [
+    {
+      "target_recall": 0.8,
+      "threshold": 0.220511915,
+      "recall": 0.803921568627451,
+      "precision": 0.5774647887323944,
+      "specificity": 0.8760330578512396,
+      "tp": 82,
+      "fn": 20,
+      "fp": 60,
+      "alarms_per_100": 24.2320819112628
+    },
+    {
+      "target_recall": 0.85,
+      "threshold": 0.1614535,
+      "recall": 0.8529411764705882,
+      "precision": 0.5304878048780488,
+      "specificity": 0.8409090909090909,
+      "tp": 87,
+      "fn": 15,
+      "fp": 77,
+      "alarms_per_100": 27.986348122866893
+    },
+    {
+      "target_recall": 0.9,
+      "threshold": 0.096791435,
+      "recall": 0.9019607843137255,
+      "precision": 0.4125560538116592,
+      "specificity": 0.7293388429752066,
+      "tp": 92,
+      "fn": 10,
+      "fp": 131,
+      "alarms_per_100": 38.05460750853242
+    },
+    {
+      "target_recall": 0.95,
+      "threshold": 0.058400654999999996,
+      "recall": 0.9509803921568627,
+      "precision": 0.3211920529801324,
+      "specificity": 0.5764462809917356,
+      "tp": 97,
+      "fn": 5,
+      "fp": 205,
+      "alarms_per_100": 51.5358361774744
+    },
+    {
+      "target_recall": 0.98,
+      "threshold": 0.051705184,
+      "recall": 0.9803921568627451,
+      "precision": 0.3058103975535168,
+      "specificity": 0.53099173553719,
+      "tp": 100,
+      "fn": 2,
+      "fp": 227,
+      "alarms_per_100": 55.80204778156997
+    }
+  ]
+}
