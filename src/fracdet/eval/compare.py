@@ -25,11 +25,14 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+from sklearn.metrics import average_precision_score
 
 from fracdet.config import load_config
 from fracdet.eval.threshold import threshold_for_recall
 
-METRICS = ["pr_auc", "roc_auc", "spec_at_recall", "precision_at_recall", "alarms_per_100"]
+METRICS = [
+    "pr_auc", "roc_auc", "spec_at_recall", "precision_at_recall", "alarms_per_100", "pr_auc_no_hw",
+]  # fmt: skip
 
 
 def run_record(run_dir: str | Path, recall_target: float) -> dict[str, Any]:
@@ -39,6 +42,14 @@ def run_record(run_dir: str | Path, recall_target: float) -> dict[str, Any]:
     preds = pd.read_csv(run_dir / "val_predictions.csv")
     op = threshold_for_recall(preds["label"], preds["prob"], recall_target)
     m = op["metrics"]
+    # PR-AUC without surgical-hardware images (reported, not used to decide): a model
+    # that leans on the metal shortcut scores well overall but drops here.
+    no_hw = preds[preds["hardware"] == 0] if "hardware" in preds else None
+    pr_no_hw = (
+        float(average_precision_score(no_hw["label"], no_hw["prob"]))
+        if no_hw is not None and 0 < no_hw["label"].sum() < len(no_hw)
+        else np.nan
+    )
     return {
         "experiment": cfg.get("experiment", cfg.get("run_name")),
         "seed": cfg.get("seed"),
@@ -53,17 +64,19 @@ def run_record(run_dir: str | Path, recall_target: float) -> dict[str, Any]:
         "precision_at_recall": m["precision"],
         "recall_at_threshold": m["recall"],
         "alarms_per_100": 100 * (m["tp"] + m["fp"]) / len(preds),
+        "pr_auc_no_hw": pr_no_hw,
     }
 
 
 def aggregate(runs: pd.DataFrame, baseline: str) -> pd.DataFrame:
     """Mean/sd per experiment, plus mean and sd of the per-seed difference from baseline."""
+    metrics = [k for k in METRICS if k in runs]  # older run tables may lack newer metrics
     base = runs[runs.experiment == baseline].set_index("seed")
     rows = []
     for exp, g in runs.groupby("experiment", sort=False):
         row: dict[str, Any] = {"experiment": exp, "n_seeds": len(g)}
-        paired = g.set_index("seed").join(base[METRICS], rsuffix="_base", how="inner")
-        for k in METRICS:
+        paired = g.set_index("seed").join(base[metrics], rsuffix="_base", how="inner")
+        for k in metrics:
             row[f"{k}_mean"] = g[k].mean()
             row[f"{k}_sd"] = g[k].std(ddof=1) if len(g) > 1 else np.nan
             d = paired[k] - paired[f"{k}_base"]
@@ -116,14 +129,18 @@ def markdown(agg: pd.DataFrame, baseline: str) -> str:
             s += f" (Δ {r[f'{k}_delta']:+.{digits}f})"
         return s
 
+    no_hw = "pr_auc_no_hw_mean" in agg  # only tables that have it (not Phase 4's)
     lines = [
         "| Variant | Seeds | Val PR-AUC | Specificity @ recall target | Alarms / 100 "
-        "| Best epoch | Min/run |",
-        "|---|---|---|---|---|---|---|",
+        + ("| PR-AUC no hardware " if no_hw else "")
+        + "| Best epoch | Min/run |",
+        "|---|---|---|---|---|" + ("---|" if no_hw else "") + "---|---|",
     ]
     for _, r in agg.iterrows():
         lines.append(
             f"| {r.experiment} | {r.n_seeds} | {cell(r, 'pr_auc')} | {cell(r, 'spec_at_recall')} | "
-            f"{cell(r, 'alarms_per_100', 1)} | {r.best_epoch_mean:.1f} | {r.minutes_mean:.1f} |"
+            f"{cell(r, 'alarms_per_100', 1)} | "
+            + (f"{cell(r, 'pr_auc_no_hw')} | " if no_hw else "")
+            + f"{r.best_epoch_mean:.1f} | {r.minutes_mean:.1f} |"
         )
     return "\n".join(lines)

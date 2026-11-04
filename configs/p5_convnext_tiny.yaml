@@ -1,0 +1,9 @@
+# Phase 5: ConvNeXt-Tiny (27.8M params): a modernised ResNet (large 7x7 kernels,
+# LayerNorm, GELU), pretrained on ImageNet-22k (14M images) before ImageNet-1k.
+# Tests whether stronger, broader pretraining transfers better to X-rays.
+_base_: baseline_resnet50.yaml
+
+run_name: p5_convnext_tiny
+
+model:
+  name: convnext_tiny.fb_in22k_ft_in1k

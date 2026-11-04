@@ -1,0 +1,34 @@
+# Phase 5 sweep: input resolution and backbone, 5 variants x 3 seeds, VALIDATION only.
+# Committed before any run. Same rule as Phase 4; the test set is used once, for a
+# winner only.
+#
+# Fairness: every variant uses the baseline's optimiser, LR, schedule, augmentation,
+# batch size and early stopping. Nothing is tuned per backbone, so the comparison is
+# "same budget, same recipe". A backbone that needs a different LR could be
+# under-sold; that limitation is stated in docs/phase-5-models.md.
+
+name: phase5_models
+
+configs:              # relative to configs/
+  - baseline_resnet50.yaml     # ResNet-50 @ 384 (re-run, same code and seeds)
+  - p5_resnet50_448.yaml       # resolution: ResNet-50 @ 448 (native long side)
+  - p5_densenet121.yaml        # backbone @ 384
+  - p5_efficientnet_b2.yaml    # backbone @ 384
+  - p5_convnext_tiny.yaml      # backbone @ 384
+
+seeds: [42, 43, 44]
+
+baseline: baseline_resnet50
+
+selection:
+  recall_target: 0.90
+  primary: spec_at_recall
+  guard: pr_auc
+  # Rule (unchanged from Phase 4): a variant wins only if its mean paired gain in
+  # spec_at_recall exceeds the seed noise (larger sd of baseline and variant) and its
+  # PR-AUC does not drop by more than its noise. Several winners -> largest gain.
+  # None -> baseline stays. Winner's representative = its median seed.
+  # Note: with 4 challengers, the chance that one clears the bar by luck is higher
+  # than in a single comparison; a winner is confirmed only by its one test run.
+  # Reported but NOT used for the decision: PR-AUC on images without surgical
+  # hardware (pr_auc_no_hw), to see which backbones lean on the metal shortcut.

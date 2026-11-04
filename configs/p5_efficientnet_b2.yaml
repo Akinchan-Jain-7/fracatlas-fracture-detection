@@ -1,0 +1,9 @@
+# Phase 5: EfficientNet-B2 (7.7M params): compound-scaled, depthwise convolutions,
+# about a third of ResNet-50's parameters. Tests whether a smaller, more
+# parameter-efficient model generalises better on 2.7k training images.
+_base_: baseline_resnet50.yaml
+
+run_name: p5_efficientnet_b2
+
+model:
+  name: efficientnet_b2.ra_in1k

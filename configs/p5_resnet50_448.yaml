@@ -1,0 +1,9 @@
+# Phase 5: same ResNet-50, input 448 px instead of 384. 91% of FracAtlas images are
+# 373x454, so 448 is about their native long side: 384 shrinks them by 15%, 448 keeps
+# nearly every pixel. (512+ would only upscale: no new detail, more compute.)
+_base_: baseline_resnet50.yaml
+
+run_name: p5_resnet50_448
+
+preprocess:
+  image_size: 448

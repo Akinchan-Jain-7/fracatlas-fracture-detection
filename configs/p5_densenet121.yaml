@@ -1,0 +1,9 @@
+# Phase 5: DenseNet-121 (7.0M params), the backbone of CheXNet (Rajpurkar et al., 2017)
+# and of the MURA musculoskeletal X-ray baseline. Dense connections reuse early,
+# fine-grained features, which may suit thin fracture lines.
+_base_: baseline_resnet50.yaml
+
+run_name: p5_densenet121
+
+model:
+  name: densenet121.tv_in1k
