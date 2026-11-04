@@ -1,0 +1,35 @@
+# Phase 4 sweep: 4 variants x 3 seeds, compared on VALIDATION only.
+# The selection rule below is committed before any run starts, so the winner
+# cannot be chosen by looking at the results first. The test set is not used here;
+# only the winner (if any) gets one test evaluation with the Phase 3 protocol.
+
+name: phase4_imbalance
+
+configs:              # relative to configs/
+  - baseline_resnet50.yaml
+  - imb_pos_weight.yaml
+  - imb_balanced_sampler.yaml
+  - imb_focal.yaml
+
+# Three seeds per variant. One run per variant cannot separate a real effect from
+# luck: seed-to-seed spread of val PR-AUC is easily +-0.02 with 102 fractures.
+# The baseline is re-run with the same seeds and the same code, so every
+# comparison is like-for-like (the Phase 2 run is not reused).
+seeds: [42, 43, 44]
+
+baseline: baseline_resnet50
+
+selection:
+  recall_target: 0.90
+  # Primary: specificity on validation at the threshold that reaches the recall
+  # target (the Phase 3 rule). Higher = fewer false alarms at the same recall.
+  primary: spec_at_recall
+  # Guard: a winner must not lose ranking quality overall.
+  guard: pr_auc
+  # A variant wins only if, averaged over seeds paired by seed:
+  #   delta(primary) > noise(primary)   and   delta(guard) > -noise(guard)
+  # where noise = the larger seed-to-seed standard deviation of the baseline
+  # and the variant. Several winners -> the largest delta(primary).
+  # No winner -> the baseline stays.
+  # The winner's representative checkpoint is its MEDIAN seed on the primary
+  # metric (not the best seed, which would be an optimistic pick).

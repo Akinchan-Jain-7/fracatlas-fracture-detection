@@ -1,0 +1,8 @@
+# Phase 4: balanced sampling. Batches are ~50% fractured (drawn with replacement);
+# an epoch keeps the same number of steps as the baseline. Plain BCE.
+_base_: baseline_resnet50.yaml
+
+run_name: imb_balanced_sampler
+
+train:
+  sampler: balanced

@@ -35,6 +35,7 @@ from fracdet.models.classifier import build_model, count_parameters
 from fracdet.seed import seed_everything, worker_init_fn
 from fracdet.train.checkpoint import git_info, load_checkpoint, save_checkpoint
 from fracdet.train.engine import predict, train_one_epoch
+from fracdet.train.imbalance import balanced_sampler, build_criterion
 from fracdet.train.metrics import binary_metrics
 from fracdet.train.schedule import warmup_cosine
 
@@ -70,13 +71,16 @@ def _maybe_subsample(frame: pd.DataFrame, n: int | None, seed: int) -> pd.DataFr
     return pd.concat(parts).sort_index().reset_index(drop=True)
 
 
-def _loader(ds, batch_size, shuffle, num_workers, seed, drop_last=False) -> DataLoader:
+def _loader(
+    ds, batch_size, shuffle, num_workers, seed, drop_last=False, sampler=None
+) -> DataLoader:
     g = torch.Generator()
     g.manual_seed(seed)
     return DataLoader(
         ds,
         batch_size=batch_size,
-        shuffle=shuffle,
+        shuffle=shuffle and sampler is None,  # a sampler decides the order itself
+        sampler=sampler,
         num_workers=num_workers,
         pin_memory=torch.cuda.is_available(),
         persistent_workers=num_workers > 0,
@@ -105,9 +109,13 @@ def fit(cfg: dict[str, Any], data_root: str | Path, run_dir: str | Path, log: lo
 
     pre, aug = cfg.get("preprocess", {}), cfg.get("augment", {})
     workers = t_cfg.get("num_workers", 4)
+    sampler_name = t_cfg.get("sampler")
+    if sampler_name not in (None, "balanced"):
+        raise ValueError(f"Unknown sampler '{sampler_name}' (expected null or balanced)")
+    sampler = balanced_sampler(train_df["label"], cfg["seed"]) if sampler_name else None
     train_loader = _loader(
         FracAtlasDataset(train_df, build_transforms(pre, aug, train=True)),
-        t_cfg["batch_size"], True, workers, cfg["seed"], drop_last=True,
+        t_cfg["batch_size"], True, workers, cfg["seed"], drop_last=True, sampler=sampler,
     )  # fmt: skip
     val_loader = _loader(
         FracAtlasDataset(val_df, build_transforms(pre, train=False)),
@@ -120,7 +128,13 @@ def fit(cfg: dict[str, Any], data_root: str | Path, run_dir: str | Path, log: lo
     params = count_parameters(model)
     log.info("model %s: %s parameters", cfg["model"]["name"], f"{params['total']:,}")
 
-    criterion = nn.BCEWithLogitsLoss()
+    # Training loss may be weighted or focal (Phase 4); validation loss is always
+    # plain BCE so the val_loss column stays comparable across variants.
+    criterion, loss_record = build_criterion(t_cfg.get("loss"), train_df["label"])
+    criterion = criterion.to(device)
+    eval_criterion = nn.BCEWithLogitsLoss()
+    imbalance = {"loss": loss_record, "sampler": sampler_name}
+    log.info("imbalance handling: %s", imbalance)
     optimizer = torch.optim.AdamW(
         _param_groups(model, t_cfg["weight_decay"]), lr=t_cfg["lr"], betas=(0.9, 0.999)
     )
@@ -140,6 +154,8 @@ def fit(cfg: dict[str, Any], data_root: str | Path, run_dir: str | Path, log: lo
         "split_name": cfg["split"]["name"],
         "split_csv_md5": md5_of_file(split_csv),
         "device": torch.cuda.get_device_name(0) if device.type == "cuda" else "cpu",
+        "seed": cfg["seed"],
+        "imbalance": imbalance,
     }
 
     best_score, best_epoch, epochs_without_gain = -np.inf, -1, 0
@@ -151,7 +167,7 @@ def fit(cfg: dict[str, Any], data_root: str | Path, run_dir: str | Path, log: lo
             model, train_loader, criterion, optimizer, scheduler, scaler, device, amp,
             t_cfg.get("grad_clip"), channels_last,
         )  # fmt: skip
-        pv = predict(model, val_loader, criterion, device, amp, channels_last)
+        pv = predict(model, val_loader, eval_criterion, device, amp, channels_last)
         m = binary_metrics(pv["label"], pv["prob"])
         row = {
             "epoch": epoch,

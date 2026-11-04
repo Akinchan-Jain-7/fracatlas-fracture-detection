@@ -1,0 +1,11 @@
+# Phase 4: focal loss, gamma = 2, no class weighting (alpha: null), so only the
+# "focus on hard examples" effect is tested. gamma = 0 would be plain BCE.
+_base_: baseline_resnet50.yaml
+
+run_name: imb_focal
+
+train:
+  loss:
+    name: focal
+    gamma: 2.0
+    alpha: null

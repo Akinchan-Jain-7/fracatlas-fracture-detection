@@ -1,0 +1,11 @@
+# Phase 4: weighted BCE. Fractured images weigh n_normal / n_fractured (~4.7, computed
+# from the training labels), so both classes contribute equally to the loss.
+# Everything else is identical to the Phase 2 baseline.
+_base_: baseline_resnet50.yaml
+
+run_name: imb_pos_weight
+
+train:
+  loss:
+    name: bce
+    pos_weight: auto
