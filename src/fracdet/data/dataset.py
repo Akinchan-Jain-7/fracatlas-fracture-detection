@@ -29,7 +29,10 @@ def load_split_frames(
     if unknown:
         raise ValueError(f"Unknown splits {unknown}; valid: {VALID_SPLITS}")
     meta = load_metadata(root)
-    split = pd.read_csv(split_csv, keep_default_na=False)[[ID_COLUMN, "split"]]
+    split = pd.read_csv(split_csv, keep_default_na=False)
+    # split_group (similar images / likely same patient) travels with each row so
+    # evaluation can resample whole groups (Phase 3 cluster bootstrap).
+    split = split[[c for c in (ID_COLUMN, "split", "split_group") if c in split]]
     df = meta.merge(split, on=ID_COLUMN, how="inner", validate="one_to_one")
     if len(df) != len(meta):
         raise ValueError(f"Split file covers {len(df)} of {len(meta)} images; wrong dataset?")

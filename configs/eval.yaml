@@ -1,0 +1,23 @@
+# Phase 3 evaluation protocol. Everything here is decided BEFORE the test set is
+# scored; changing it afterwards would let the test result steer the method.
+# The split and preprocessing come from the evaluated run's own config.yaml.
+
+eval:
+  # Operating threshold = the highest threshold that still finds at least this
+  # share of VALIDATION fractures. Recall first: a missed fracture costs more
+  # than a false alarm that a radiologist dismisses. Chosen after looking at
+  # the validation trade-off table printed by tune_threshold.py (val only).
+  target_recall: 0.90
+
+  bootstrap:
+    n: 2000          # resamples; percentile intervals are stable to ~0.005 at this size
+    seed: 0
+    alpha: 0.05      # 95% intervals
+  group_column: split_group  # resample whole groups (similar images / likely same patient)
+  min_positives_for_ci: 10   # smaller subgroups get point estimates only
+
+  # Re-scoring validation with the checkpoint just before the test run must
+  # reproduce the numbers the threshold was chosen on (proves same model + preprocessing).
+  val_check:
+    pr_auc_tol: 0.002
+    max_flips: 2     # images allowed to change side of the threshold (GPU/AMP noise)

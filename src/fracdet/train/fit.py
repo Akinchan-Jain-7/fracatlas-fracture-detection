@@ -39,7 +39,7 @@ from fracdet.train.metrics import binary_metrics
 from fracdet.train.schedule import warmup_cosine
 
 TRAIN_SPLITS = ("train", "val")  # never "test"
-PREDICTION_COLUMNS = ["image_id", "label", "region", "view", "hardware", "multiscan"]
+PREDICTION_COLUMNS = ["image_id", "label", "region", "view", "hardware", "multiscan", "split_group"]
 
 
 def _param_groups(model: nn.Module, weight_decay: float) -> list[dict[str, Any]]:
