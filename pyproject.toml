@@ -44,6 +44,10 @@ src = ["src", "scripts", "tests"]
 # UP: modern syntax, SIM: simplifications, NPY: numpy-specific pitfalls.
 select = ["E", "F", "I", "B", "UP", "SIM", "NPY"]
 
+[tool.ruff.lint.per-file-ignores]
+# Notebook shell lines (!python ... --set a=b c=d) cannot be wrapped.
+"notebooks/*.ipynb" = ["E501"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"

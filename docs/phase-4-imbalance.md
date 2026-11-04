@@ -13,7 +13,58 @@ gets a single test evaluation with the Phase 3 protocol.
 
 ## Results
 
-*Pending: filled in from `results/phase4_imbalance/` after the Kaggle sweep.*
+**Decision (pre-registered rule): the baseline stays.** None of the three
+remedies improved specificity at 90% recall; all three were worse on average.
+The test set was not touched.
+
+12 runs, 3 seeds each, on Kaggle T4 x2 in 73 min (`results/phase4_imbalance/`).
+Mean ± sd over seeds, and Δ is the mean paired difference from the baseline with the same seed.
+
+| Variant | Val PR-AUC | Specificity at recall ≥ 0.90 | Alarms / 100 X-rays | Best epoch |
+|---|---|---|---|---|
+| **baseline** | 0.709 ± 0.016 | **0.556 ± 0.056** | **52.4 ± 4.6** | 10.3 |
+| weighted loss | 0.723 ± 0.023 (Δ +0.014) | 0.510 ± 0.017 (Δ −0.045) | 56.1 (Δ +3.8) | 10.3 |
+| balanced sampler | 0.720 ± 0.006 (Δ +0.012) | 0.482 ± 0.044 (Δ −0.074) | 58.5 (Δ +6.1) | 8.0 |
+| focal loss | 0.711 ± 0.003 (Δ +0.003) | 0.505 ± 0.114 (Δ −0.051) | 56.6 (Δ +4.2) | 14.3 |
+
+![Per-seed results](figures/phase-4/compare.png)
+
+| Variant | Δ specificity | Noise | Δ PR-AUC | Noise | Wins? |
+|---|---|---|---|---|---|
+| weighted loss | −0.045 | 0.056 | +0.014 | 0.023 | no |
+| balanced sampler | −0.074 | 0.056 | +0.012 | 0.016 | no (worse beyond noise) |
+| focal loss | −0.051 | 0.114 | +0.003 | 0.016 | no |
+
+### What the numbers say
+
+1. **Rebalancing didn't help where it matters.** All three nudge PR-AUC up by
+   0.003–0.014, which is well inside seed noise. At the 90%-recall operating
+   point they flag *more* normal X-rays, not fewer. The balanced sampler is
+   worse by more than the noise (−0.074).
+2. **Why:** PR-AUC is dominated by the confident top of the ranking, which
+   rebalancing tidies up a little. Specificity at 90% recall depends on the
+   *bottom* of the fracture scores: the 10 hardest fractures the threshold
+   has to reach down to. Those images look normal to the model. Re-weighting
+   the loss doesn't give it the ability to see them. The class prior was never
+   the bottleneck; a tuned threshold already handles it.
+3. **The sampler overfits sooner.** Best epoch 8.0 vs 10.3. Each of the 483
+   training fractures is repeated ~2.8× per epoch, so the model memorises them
+   faster.
+4. **Focal loss is the noisiest.** Specificity ranges from 0.42 to 0.63
+   across seeds. Focusing on hard examples also focuses on noisy ones (Phase 1
+   found label noise), which makes training less stable.
+5. **Seed noise is large, and that is a finding in itself.** The baseline
+   alone ranges from 0.50 to 0.61 specificity and 0.692 to 0.725 PR-AUC across
+   three seeds. A single-run comparison could easily have crowned any of
+   these variants. Phase 5 keeps 3 seeds per variant.
+6. **No new test evaluation.** The Phase 3 test result (recall 0.892,
+   specificity 0.548) remains the reference.
+
+**Implication for Phase 5:** the remaining errors are about what the model
+can *see*, not how the loss is weighted. Phase 5 should therefore change
+**input resolution** (hairline fractures at 384 px) and the
+**architecture/backbone**, compared the same way. Phase 6 (Grad-CAM on the
+missed fractures) will show what those hard cases look like.
 
 ---
 

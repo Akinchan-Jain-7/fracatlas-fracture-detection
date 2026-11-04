@@ -68,8 +68,8 @@ def plot(runs: pd.DataFrame, order: list[str], out: Path, recall: float) -> None
         ax.set_xticks(range(len(order)), [o.replace("imb_", "") for o in order], rotation=15)
         ax.set_title(title)
         ax.grid(axis="x", visible=False)
-    axes[0].text(0, 1.02, "dots: seeds · bar: mean", transform=axes[0].transAxes,
-                 color=INK_2, fontsize=8)  # fmt: skip
+    fig.text(0.01, -0.04, "dots: one run per seed · bar: mean over seeds · validation set",
+             color=INK_2, fontsize=8)  # fmt: skip
     fig.savefig(out)
     plt.close(fig)
 
