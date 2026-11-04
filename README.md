@@ -43,7 +43,7 @@ pytest                                   # unit tests
 | 0 Setup | ✅ | [docs](docs/phase-0-setup.md): config, seeding, checksum-verified data, CI |
 | 1 Data | ✅ | [docs](docs/phase-1-data.md): EDA, shortcuts, duplicates, leakage-safe split |
 | 2 Baseline | ✅ | [docs](docs/phase-2-baseline.md): ResNet-50 transfer learning; **val PR-AUC 0.714, ROC-AUC 0.869** (test not yet used) |
-| 3 Evaluation | 🔨 code ready, test run pending | [docs](docs/phase-3-evaluation.md): recall-first threshold pre-registered on val, one-shot test score, cluster-bootstrap CIs, no-hardware subgroup |
+| 3 Evaluation | ✅ | [docs](docs/phase-3-evaluation.md): threshold pre-registered on val, test scored once. **Test recall 0.892 [0.825, 0.955] at specificity 0.548; PR-AUC 0.739 [0.625, 0.832]** (0.695 without hardware images) |
 
 ## Quick start (Kaggle)
 

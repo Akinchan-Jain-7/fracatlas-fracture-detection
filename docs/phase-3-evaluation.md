@@ -10,7 +10,69 @@ No new training happens in this phase. The model is exactly Phase 2's `best.pt`
 
 ## Results
 
-*Pending: filled in from `results/phase3_baseline_resnet50/` after the Kaggle run.*
+**Operating threshold 0.00477**, chosen on validation (recall ≥ 0.90) and
+committed in `c805cfa` at 07:07 UTC, four minutes before the test set was
+scored at 07:10 UTC. Re-scoring validation before the test pass reproduced it
+exactly (PR-AUC identical, 0 images flipped). Tesla T4, Kaggle notebook
+Version 3.
+
+### Test set (589 images, 102 fractures in 47 groups), 95% cluster-bootstrap CI
+
+| Metric | At the operating threshold | At 0.5 (Phase 2 default) |
+|---|---|---|
+| **Recall** | **0.892** [0.825, 0.955] — 91 of 102 found | 0.588 — 60 of 102 |
+| Precision | 0.293 [0.208, 0.379] | 0.769 |
+| Specificity | 0.548 [0.496, 0.600] | 0.963 |
+| NPV | 0.960 [0.933, 0.984] | 0.918 |
+| Flagged per 100 X-rays | 52.8 | 13.2 |
+| ROC-AUC | 0.870 [0.818, 0.919] | (same) |
+| PR-AUC | 0.739 [0.625, 0.832] | (same) |
+
+### Subgroups (test, operating threshold)
+
+| Subgroup | Images | Fractures (groups) | Found / missed | False alarms | Recall | Specificity | PR-AUC |
+|---|---|---|---|---|---|---|---|
+| all | 589 | 102 (47) | 91 / 11 | 220 | 0.892 [0.825, 0.955] | 0.548 [0.496, 0.600] | 0.739 [0.625, 0.832] |
+| **no hardware** | 578 | 91 (43) | 80 / 11 | 220 | 0.879 [0.800, 0.947] | 0.548 [0.498, 0.601] | **0.695** [0.565, 0.802] |
+| hardware | 11 | 11 (7) | 11 / 0 | 0 | 1.000 | n/a (no normals) | n/a |
+| hand | 178 | 54 (27) | 50 / 4 | 81 | 0.926 [0.840, 0.985] | 0.347 [0.262, 0.438] | 0.756 |
+| leg | 309 | 30 (9) | 27 / 3 | 112 | 0.900 [0.757, 1.000] | 0.599 [0.528, 0.664] | 0.762 |
+| mixed | 61 | 17 (10) | 13 / 4 | 18 | 0.765 [0.545, 0.941] | 0.591 [0.467, 0.727] | 0.715 |
+| hip | 27 | 1 (1) | 1 / 0 | 6 | too few | 0.769 | too few |
+
+Full numbers (F1, NPV, Brier, every interval, validation side by side):
+`results/phase3_baseline_resnet50/test_metrics.json` and `report.md`.
+
+### What the numbers say
+
+1. **The recall target held.** Test recall 0.892 vs 0.902 on validation; the
+   interval [0.825, 0.955] contains 0.90. The slight drop is the expected
+   regression from tuning on validation, and it is within noise.
+2. **But the price is high.** To catch 9 in 10 fractures, this model flags
+   **53 of every 100 X-rays**, and 7 in 10 alarms are false. Its scores for
+   the hardest fractures sit near zero: the threshold had to go down to
+   0.0048. As a triage tool this baseline would halve a radiologist's
+   workload at best. That gap is what Phases 4–5 must close, compared at
+   this same 90% recall.
+3. **No sign of overfitting to validation in ranking.** Test PR-AUC (0.739)
+   and ROC-AUC (0.870) match validation (0.714 / 0.869) within their
+   intervals.
+4. **Hardware inflates the headline a little.** Removing the 11 hardware
+   images drops PR-AUC from 0.739 to 0.695 and recall from 0.892 to 0.879. All
+   11 hardware images were fractures and all were caught. The model clearly
+   uses metal as evidence; Grad-CAM in Phase 6 will show how much.
+5. **Regions differ.** Hand: highest recall but specificity only 0.35 (hand
+   X-rays get high scores across the board). Mixed-region images: lowest
+   recall (13 of 17). Leg: 27 of 30 with the best specificity. The leg
+   result rests on only 9 fracture groups, so its interval is wide.
+6. **The intervals are wide** because 102 fractures are really 47 independent
+   cases. A future model needs to beat this by more than ~0.1 in PR-AUC
+   before the difference is clearly real on this test set.
+
+Predictions per image, figures (PR/ROC val vs test, confusion matrices) and
+logs are in the Kaggle notebook output, Version 3
+("phase3 step2 test evaluation (one-shot)"), under
+`outputs/eval/baseline_resnet50/`.
 
 ---
 
