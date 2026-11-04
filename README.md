@@ -9,6 +9,24 @@ dataset: 4,083 X-rays, about 18% fractured.
 
 **Not a medical device. For education and research only.**
 
+## Results so far
+
+Current model: ImageNet-pretrained ResNet-50, fine-tuned on grayscale 384 px X-rays.
+**Test set, scored once**, with a threshold fixed on validation beforehand:
+
+| Metric | Value [95% CI] | Meaning |
+|---|---|---|
+| Recall | **0.892** [0.825, 0.955] | 91 of 102 fractures found |
+| Specificity | 0.548 [0.496, 0.600] | about half the normal X-rays are cleared |
+| PR-AUC | 0.739 [0.625, 0.832] | 4× the random baseline (0.17) |
+| PR-AUC without surgical hardware | 0.695 | metal is part of what the model uses |
+
+How these numbers were kept honest:
+- **Leakage-safe split.** Near-duplicate and likely same-patient images never cross splits (Phase 1).
+- **Threshold pre-registered.** It was chosen on validation and committed to git before the test set was opened. The evaluation script refuses to run otherwise (Phase 3).
+- **Patient-level uncertainty.** The confidence intervals resample whole patient groups: 102 fractures come from only 47 groups.
+- **Seeded comparisons.** Model changes are compared over 3 seeds on validation, with the selection rule fixed before the runs. Weighted loss, oversampling and focal loss all failed that test (Phase 4).
+
 ## Repository layout
 
 ```
