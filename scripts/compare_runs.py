@@ -65,10 +65,11 @@ def plot(runs: pd.DataFrame, order: list[str], out: Path, recall: float) -> None
             v = runs.loc[runs.experiment == exp, col]
             ax.scatter([i] * len(v), v, color=SERIES[i % len(SERIES)], s=36, zorder=3)
             ax.hlines(v.mean(), i - 0.25, i + 0.25, color=INK, linewidth=2, zorder=4)
-        ax.set_xticks(range(len(order)), [o.replace("imb_", "") for o in order], rotation=15)
+        labels = [o.replace("imb_", "").replace("p5_", "").replace("_resnet50", "") for o in order]
+        ax.set_xticks(range(len(order)), labels, rotation=20, ha="right")
         ax.set_title(title)
         ax.grid(axis="x", visible=False)
-    fig.text(0.01, -0.04, "dots: one run per seed · bar: mean over seeds · validation set",
+    fig.text(0.01, -0.14, "dots: one run per seed · bar: mean over seeds · validation set",
              color=INK_2, fontsize=8)  # fmt: skip
     fig.savefig(out)
     plt.close(fig)

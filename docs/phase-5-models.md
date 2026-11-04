@@ -8,7 +8,68 @@ pretraining. The yardstick is the same as before: validation specificity at
 
 ## Results
 
-*Pending: filled in from `results/phase5_models/` after the Kaggle sweep.*
+**Decision (pre-registered rule): ConvNeXt-Tiny replaces ResNet-50**, subject
+to its one test evaluation. EfficientNet-B2 also cleared the bar. ConvNeXt-Tiny
+had the larger gain, and it is clearly ahead on PR-AUC.
+
+15 runs, 3 seeds each, on Kaggle T4 x2 in 98 min (`results/phase5_models/`).
+Values are mean ± sd over seeds, and Δ is the mean paired difference from the baseline with the same seed.
+
+| Variant | Val PR-AUC | Specificity at recall ≥ 0.90 | Alarms / 100 | PR-AUC without hardware | Best epoch | Min / run |
+|---|---|---|---|---|---|---|
+| baseline (ResNet-50, 384) | 0.709 ± 0.016 | 0.556 ± 0.056 | 52.4 | 0.680 ± 0.021 | 10.3 | 11.5 |
+| ResNet-50, 448 | 0.695 ± 0.008 (Δ −0.014) | 0.563 ± 0.069 (Δ +0.008) | 51.8 | 0.654 (Δ −0.026) | 14.0 | 16.0 |
+| DenseNet-121 | 0.806 ± 0.011 (Δ +0.097) | 0.583 ± 0.083 (Δ +0.028) | 50.1 | 0.782 (Δ +0.102) | 11.3 | 13.5 |
+| EfficientNet-B2 | 0.764 ± 0.021 (Δ +0.056) | 0.678 ± 0.088 (Δ +0.123) | 42.3 | 0.723 (Δ +0.043) | 12.0 | 11.7 |
+| **ConvNeXt-Tiny** | **0.814 ± 0.018 (Δ +0.105)** | **0.680 ± 0.091 (Δ +0.124)** | **42.2** | **0.786 (Δ +0.106)** | 6.0 | 8.7 |
+
+![Per-seed results](figures/phase-5/compare.png)
+
+| Variant | Δ specificity | Noise | Δ PR-AUC | Noise | Wins? |
+|---|---|---|---|---|---|
+| ResNet-50, 448 | +0.008 | 0.069 | −0.014 | 0.016 | no |
+| DenseNet-121 | +0.028 | 0.083 | +0.097 | 0.016 | no (ranking much better, operating point within noise) |
+| EfficientNet-B2 | +0.123 | 0.088 | +0.056 | 0.021 | yes |
+| ConvNeXt-Tiny | +0.124 | 0.091 | +0.105 | 0.018 | **yes, larger gain** |
+
+### What the numbers say
+
+1. **The backbone was the bottleneck, not the loss or the resolution.**
+   ConvNeXt-Tiny raises validation PR-AUC from 0.709 to 0.814 and cuts false
+   alarms at 90% recall from 52 to 42 per 100 X-rays. Phase 4's loss tricks
+   moved PR-AUC by at most 0.014; this moves it by 0.105.
+2. **The gain is not the metal shortcut.** Without hardware images, ConvNeXt's
+   PR-AUC rises from 0.680 to 0.786 (+0.106), the same size as the overall
+   gain. It finds fractures better, not metal better.
+3. **Resolution did nothing.** ResNet-50 at 448 px is no better than at 384
+   (PR-AUC −0.014, within noise). This confirms the Phase 5 design note: the
+   images are already ~454 px, so there is little extra detail to recover.
+4. **Pretraining matters.** The two biggest PR-AUC gains come from DenseNet-121
+   (an X-ray-proven design) and ConvNeXt-Tiny (ImageNet-22k: 14M images
+   vs 1.3M). ConvNeXt converges fastest too: best epoch 6 vs 10, and
+   8.7 min per run vs 11.5.
+5. **DenseNet ranks better but does not win.** Its PR-AUC gain (+0.097) is
+   large and consistent, but its specificity at 90% recall swings 0.49–0.65
+   across seeds. The operating point depends on the ~10 hardest fractures,
+   so it is far noisier than PR-AUC, and the rule requires a gain beyond that
+   noise.
+6. **EfficientNet-B2 "wins" partly by luck of one seed.** Its specificity is
+   0.78, 0.65 and 0.61 across seeds. Its scores also sit extremely low
+   (thresholds around 1e-5), which is a calibration warning for deployment.
+   ConvNeXt has the same primary gain with far better PR-AUC.
+7. **Training is reproducible.** The baseline's three seeds gave identical
+   metrics here and in the Phase 4 sweep, two separate Kaggle sessions hours
+   apart.
+8. **Caveats.** Five candidates were compared on one validation set, so a
+   winner can be partly luck; ConvNeXt's own seed 42 is much weaker (0.57)
+   than seeds 43/44 (0.73). That is why the winner must still pass its one
+   test evaluation before it replaces the baseline. No hyperparameters were
+   tuned per backbone.
+
+**Next:** the one-shot test evaluation of ConvNeXt-Tiny's median-seed
+checkpoint (seed 44: val specificity 0.729, PR-AUC 0.825) with the Phase 3
+protocol. The threshold is tuned on that run's validation predictions and
+committed first, then the test set is scored once.
 
 ---
 

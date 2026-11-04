@@ -63,7 +63,7 @@ pytest                                   # unit tests
 | 2 Baseline | ✅ | [docs](docs/phase-2-baseline.md): ResNet-50 transfer learning; **val PR-AUC 0.714, ROC-AUC 0.869** (test not yet used) |
 | 3 Evaluation | ✅ | [docs](docs/phase-3-evaluation.md): threshold pre-registered on val, test scored once. **Test recall 0.892 [0.825, 0.955] at specificity 0.548; PR-AUC 0.739 [0.625, 0.832]** (0.695 without hardware images) |
 | 4 Class imbalance | ✅ | [docs](docs/phase-4-imbalance.md): weighted BCE, balanced sampler, focal loss vs baseline, 3 seeds each, rule fixed before the runs. **No remedy helped**: all lowered val specificity at 90% recall (Δ −0.045 to −0.074); baseline kept |
-| 5 Model comparison | 🔨 sweep running | [docs](docs/phase-5-models.md): ResNet-50 at 448 px (native resolution), DenseNet-121, EfficientNet-B2, ConvNeXt-Tiny vs baseline, 3 seeds each, rule fixed before the runs |
+| 5 Model comparison | ✅ val / 🔨 test pending | [docs](docs/phase-5-models.md): 4 challengers × 3 seeds. **ConvNeXt-Tiny wins: val PR-AUC 0.709 → 0.814, false alarms at 90% recall 52 → 42 per 100**, gain holds without hardware images. Higher resolution (448 px) gave nothing |
 
 ## Quick start (Kaggle)
 
