@@ -8,9 +8,42 @@ pretraining. The yardstick is the same as before: validation specificity at
 
 ## Results
 
-**Decision (pre-registered rule): ConvNeXt-Tiny replaces ResNet-50**, subject
-to its one test evaluation. EfficientNet-B2 also cleared the bar. ConvNeXt-Tiny
-had the larger gain, and it is clearly ahead on PR-AUC.
+**Decision (pre-registered rule): ConvNeXt-Tiny replaces ResNet-50.** It won
+on validation and then confirmed the gain in its one test evaluation (below).
+EfficientNet-B2 also cleared the validation bar. ConvNeXt-Tiny had the larger
+gain, and it is clearly ahead on PR-AUC.
+
+### Test confirmation (scored once, Phase 3 protocol)
+
+The median-seed checkpoint (seed 44, epoch 4) was used. Its threshold of 0.0968
+was tuned on validation and committed in `c010ec8` before the test set was
+scored (`results/phase3_p5_convnext_tiny_s44/`). Test set: 589 images,
+102 fractures. CIs are 95% cluster-bootstrap over patient groups.
+
+| Metric | ConvNeXt-Tiny | ResNet-50 baseline (Phase 3) |
+|---|---|---|
+| Recall | **0.922** [0.859, 0.976] (94 / 102) | 0.892 [0.825, 0.955] (91 / 102) |
+| Specificity | **0.708** [0.643, 0.764] | 0.548 [0.496, 0.600] |
+| Precision | 0.398 [0.298, 0.498] | 0.293 [0.208, 0.379] |
+| PR-AUC | **0.853** [0.776, 0.914] | 0.739 [0.625, 0.832] |
+| ROC-AUC | 0.937 [0.902, 0.967] | 0.870 |
+| Flagged per 100 X-rays | 40.1 | 52.8 |
+| PR-AUC without hardware | 0.825 [0.731, 0.897] | 0.695 |
+
+- **The validation gain held on test.** Recall stayed above 0.90 at the
+  pre-registered threshold. False alarms fell from 53 to 40 per 100 X-rays,
+  and the specificity intervals of the two models do not overlap.
+- **Not the metal shortcut.** Without hardware images, PR-AUC is 0.825
+  (baseline 0.695).
+- **The gain is not uniform.** Hand fractures: recall 0.963, but specificity
+  only 0.298 (baseline 0.347), so most normal hands are still flagged. Leg
+  fractures: recall 0.800 (24 / 30), compared with 27 / 30 for the baseline.
+  ConvNeXt misses 3 more leg fractures, while specificity on legs is 0.867.
+  Each region has only 9–27 patient groups, so these are leads, not
+  conclusions.
+- **Calibration.** At the default threshold of 0.5, recall drops to 0.784
+  (specificity 0.955). The model's scores are not probabilities to read
+  literally, so it needs the tuned threshold.
 
 15 runs, 3 seeds each, on Kaggle T4 x2 in 98 min (`results/phase5_models/`).
 Values are mean ± sd over seeds, and Δ is the mean paired difference from the baseline with the same seed.
@@ -62,14 +95,13 @@ Values are mean ± sd over seeds, and Δ is the mean paired difference from the 
    apart.
 8. **Caveats.** Five candidates were compared on one validation set, so a
    winner can be partly luck; ConvNeXt's own seed 42 is much weaker (0.57)
-   than seeds 43/44 (0.73). That is why the winner must still pass its one
-   test evaluation before it replaces the baseline. No hyperparameters were
+   than seeds 43/44 (0.73). That is why the winner had to pass its one test
+   evaluation before replacing the baseline (it did). No hyperparameters were
    tuned per backbone.
 
-**Next:** the one-shot test evaluation of ConvNeXt-Tiny's median-seed
-checkpoint (seed 44: val specificity 0.729, PR-AUC 0.825) with the Phase 3
-protocol. The threshold is tuned on that run's validation predictions and
-committed first, then the test set is scored once.
+**Next:** Phase 6, explainability (Grad-CAM) on the new model. It checks
+whether ConvNeXt looks at the fracture, especially on the leg misses and the
+false alarms on hands.
 
 ---
 

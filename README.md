@@ -11,21 +11,26 @@ dataset: 4,083 X-rays, about 18% fractured.
 
 ## Results so far
 
-Current model: ImageNet-pretrained ResNet-50, fine-tuned on grayscale 384 px X-rays.
+Current model: ConvNeXt-Tiny (ImageNet-22k pretrained), fine-tuned on grayscale 384 px X-rays.
+It replaced the ResNet-50 baseline after winning a seeded comparison on validation (Phase 5).
 **Test set, scored once**, with a threshold fixed on validation beforehand:
 
-| Metric | Value [95% CI] | Meaning |
-|---|---|---|
-| Recall | **0.892** [0.825, 0.955] | 91 of 102 fractures found |
-| Specificity | 0.548 [0.496, 0.600] | about half the normal X-rays are cleared |
-| PR-AUC | 0.739 [0.625, 0.832] | 4× the random baseline (0.17) |
-| PR-AUC without surgical hardware | 0.695 | metal is part of what the model uses |
+| Metric | Value [95% CI] | ResNet-50 baseline | Meaning |
+|---|---|---|---|
+| Recall | **0.922** [0.859, 0.976] | 0.892 | 94 of 102 fractures found |
+| Specificity | **0.708** [0.643, 0.764] | 0.548 | 7 in 10 normal X-rays are cleared |
+| Flagged per 100 X-rays | 40 | 53 | about a quarter fewer false alarms to review |
+| PR-AUC | **0.853** [0.776, 0.914] | 0.739 | 5× the random baseline (0.17) |
+| PR-AUC without surgical hardware | 0.825 | 0.695 | the gain is not just the metal shortcut |
+
+Known weak spots: normal hand X-rays are still mostly flagged (specificity 0.30), and leg
+recall is 0.80 (24 / 30). Details are in [Phase 5](docs/phase-5-models.md).
 
 How these numbers were kept honest:
 - **Leakage-safe split.** Near-duplicate and likely same-patient images never cross splits (Phase 1).
 - **Threshold pre-registered.** It was chosen on validation and committed to git before the test set was opened. The evaluation script refuses to run otherwise (Phase 3).
 - **Patient-level uncertainty.** The confidence intervals resample whole patient groups: 102 fractures come from only 47 groups.
-- **Seeded comparisons.** Model changes are compared over 3 seeds on validation, with the selection rule fixed before the runs. Weighted loss, oversampling and focal loss all failed that test (Phase 4).
+- **Seeded comparisons.** Model changes are compared over 3 seeds on validation, with the selection rule fixed before the runs. Weighted loss, oversampling and focal loss all failed that test (Phase 4). The new backbone passed it and was then confirmed by its own single test evaluation (Phase 5).
 
 ## Repository layout
 
@@ -63,7 +68,7 @@ pytest                                   # unit tests
 | 2 Baseline | ✅ | [docs](docs/phase-2-baseline.md): ResNet-50 transfer learning; **val PR-AUC 0.714, ROC-AUC 0.869** (test not yet used) |
 | 3 Evaluation | ✅ | [docs](docs/phase-3-evaluation.md): threshold pre-registered on val, test scored once. **Test recall 0.892 [0.825, 0.955] at specificity 0.548; PR-AUC 0.739 [0.625, 0.832]** (0.695 without hardware images) |
 | 4 Class imbalance | ✅ | [docs](docs/phase-4-imbalance.md): weighted BCE, balanced sampler, focal loss vs baseline, 3 seeds each, rule fixed before the runs. **No remedy helped**: all lowered val specificity at 90% recall (Δ −0.045 to −0.074); baseline kept |
-| 5 Model comparison | ✅ val / 🔨 test pending | [docs](docs/phase-5-models.md): 4 challengers × 3 seeds. **ConvNeXt-Tiny wins: val PR-AUC 0.709 → 0.814, false alarms at 90% recall 52 → 42 per 100**, gain holds without hardware images. Higher resolution (448 px) gave nothing |
+| 5 Model comparison | ✅ | [docs](docs/phase-5-models.md): 4 challengers × 3 seeds; **ConvNeXt-Tiny won** (val PR-AUC 0.709 → 0.814) and was **confirmed on test, scored once: recall 0.922 [0.859, 0.976] at specificity 0.708 [0.643, 0.764], PR-AUC 0.853** (baseline 0.892 / 0.548 / 0.739). It is now the current model. 448 px resolution gave nothing |
 
 ## Quick start (Kaggle)
 
