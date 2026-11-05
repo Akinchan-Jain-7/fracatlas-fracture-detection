@@ -43,6 +43,19 @@ def model_view(path: str | Path, image_size: int) -> tuple[np.ndarray, Letterbox
     return np.asarray(boxed), geom
 
 
+def heat_rgba(norm: np.ndarray, max_alpha: float = 0.45) -> np.ndarray:
+    """Heatmap as an RGBA image whose opacity grows with the value (0 = fully transparent).
+
+    Built explicitly instead of passing an alpha array to ``imshow``: some
+    matplotlib versions (the Kaggle image's, for one) silently ignore per-pixel
+    alpha there and paint the whole map opaque.
+    """
+    norm = np.clip(norm, 0.0, 1.0)
+    rgba = matplotlib.colormaps["jet"](norm)
+    rgba[..., 3] = max_alpha * np.sqrt(norm)
+    return rgba
+
+
 def _draw_boxes(ax, boxes: list[Box], geom: LetterboxGeometry) -> None:
     rows, cols = geom.content
     for b in boxes:
@@ -89,8 +102,7 @@ def plot_gallery(
         a_plain.imshow(crop, cmap="gray", vmin=0, vmax=255)
         a_cam.imshow(crop, cmap="gray", vmin=0, vmax=255)
         if peak > 0:
-            norm = cam / peak
-            a_cam.imshow(norm, cmap="jet", alpha=0.45 * norm**0.5, vmin=0, vmax=1)
+            a_cam.imshow(heat_rgba(cam / peak))
             py, px = np.unravel_index(int(np.argmax(cam)), cam.shape)
             a_cam.plot(px, py, marker="x", color=PEAK_COLOR, markersize=7, mew=2)
         for ax in (a_plain, a_cam):
@@ -109,7 +121,7 @@ def plot_gallery(
     )  # fmt: skip
     fig.tight_layout(rect=(0, 0.015, 1, 0.97))
     out.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out)
+    fig.savefig(out, dpi=110)  # galleries are committed: keep the files small
     plt.close(fig)
 
 

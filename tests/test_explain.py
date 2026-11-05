@@ -23,6 +23,7 @@ from fracdet.data.transforms import (
     letterbox_geometry,
 )
 from fracdet.eval.protocol import ProtocolError
+from fracdet.explain.figures import heat_rgba
 from fracdet.explain.gradcam import (
     GradCAM,
     explain_image,
@@ -335,3 +336,12 @@ def test_explain_split_end_to_end(tmp_path, fake_root):
     )
     with pytest.raises(ProtocolError, match="differ from committed"):
         explain_split(split="test", out_dir=tmp_path / "test2", **kwargs)
+
+
+def test_heatmap_overlay_is_transparent_where_there_is_no_evidence():
+    norm = np.array([[0.0, 0.25], [1.0, 2.0]])
+    rgba = heat_rgba(norm)
+    assert rgba.shape == (2, 2, 4)
+    assert rgba[0, 0, 3] == 0.0  # no evidence: the X-ray shows through
+    assert rgba[1, 0, 3] == pytest.approx(0.45) and rgba[1, 1, 3] == pytest.approx(0.45)
+    assert rgba[0, 1, 3] == pytest.approx(0.45 * 0.5)
