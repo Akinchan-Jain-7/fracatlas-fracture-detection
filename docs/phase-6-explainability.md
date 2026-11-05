@@ -109,8 +109,8 @@ baseline, they depend on the trained weights, and every missed fracture is a
 case where the model looked somewhere else. On X-rays with surgical hardware
 the heatmaps sit on the metal.
 
-Kaggle notebook `notebook2ac59126bb`, version 7, T4. Numbers below are from its log; the
-output files and figures are added to `results/phase6_explain/` and `docs/figures/phase-6/` next.
+Kaggle notebook `notebook2ac59126bb`, version 7, T4 (`results/phase6_explain/`, with
+provenance and checksums in its README).
 Both splits reproduced the committed Phase 5 outcome counts exactly
 (validation TP 92 / FP 131 / TN 353 / FN 10; test 94 / 142 / 345 / 8). The
 plan was committed in `0e52ac7` before the run.
@@ -124,6 +124,8 @@ plan was committed in `0e52ac7` before the run.
 | centre of the image | 0.049 [0.011, 0.094] | 0.078 [0.010, 0.157] |
 | chance (box share of the image) | 0.008 | 0.010 |
 | heatmap mass inside the boxes, `stages.3` | 7.0% (boxes cover 0.8%) | 7.8% (boxes cover 1.0%) |
+
+![Pointing game, validation, with the random-weight baselines](figures/phase-6/val_pointing_game.png)
 
 - **Far above every baseline.** About 1 peak in 5 lands exactly in the box.
   The boxes cover only about 1% of the image, so chance is 1 in 100, and the
@@ -147,10 +149,17 @@ plan was committed in `0e52ac7` before the run.
 Not one of the 18 missed fractures had its heatmap peak on the fracture.
 The misses are failures to *find* the fracture, not fractures the model
 found and then scored too low. Lowering the threshold would catch some of
-them only by flagging many more normal X-rays; the model needs to *see* them. In the test gallery
-(`test_missed_fractures.png`), six of the eight are leg X-rays, which
-matches the leg recall drop found in Phase 5. The peaks sit on soft tissue,
-on the image border, or on the wrong joint, and in two cases just beside the box.
+them only by flagging many more normal X-rays; the model needs to *see* them.
+
+**14 of the 18 misses are leg X-rays** (validation 8 of 10, test 6 of 8),
+which matches the leg recall drop found in Phase 5. In the galleries, most are
+feet and ankles, and the heat often spreads over the dark background beside
+the leg or onto a neighbouring bone, with the peak on the wrong joint or just
+beside a small box.
+
+![Missed fractures, test](figures/phase-6/test_missed_fractures.png)
+
+![Missed fractures, validation](figures/phase-6/val_missed_fractures.png)
 
 ### Sanity check: the maps depend on the trained weights
 
@@ -173,7 +182,7 @@ These observations come from the pre-declared 12-image galleries. They
 are leads to test, not findings.
 
 - **Hardware.** On images with plates, rods or screws, the heat lies along
-  the metal (`test_hardware.png`). The model uses implants as evidence.
+  the metal ([figure](figures/phase-6/test_hardware.png)). The model uses implants as evidence.
   Phase 5 showed this is not the whole story (PR-AUC 0.825 without
   hardware images), but a deployed tool must not treat a healed, plated
   bone as a new fracture.
@@ -181,14 +190,17 @@ are leads to test, not findings.
   (lateral) views of the wrist and forearm, with the heat on the wrist,
   where bones overlap. Distal-radius fractures are common there, so the
   model seems to have learned "wrist on a side view" as a fracture
-  location. That fits Phase 5's low hand specificity.
+  location. That fits Phase 5's low hand specificity
+  ([figure](figures/phase-6/test_hand_false_alarms.png)).
 - **Other false alarms.** The peaks sit at the ends of long bones (knee,
   ankle, elbow). Several of these X-rays look like children's limbs, where
   growth plates are at those positions and can resemble a fracture line.
-  The dataset has no age field, so this cannot be checked directly.
+  The dataset has no age field, so this cannot be checked directly
+  ([figure](figures/phase-6/test_other_false_alarms.png)).
 - **Found fractures.** When the peak misses the box, it is usually on the
   same bone nearby. When the X-ray shows two views side by side, the heat
-  often goes to one view only.
+  often goes to one view only
+  ([figure](figures/phase-6/test_found_fractures.png)).
 
 ### What this means for the next phases
 

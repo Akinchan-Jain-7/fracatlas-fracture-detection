@@ -26,6 +26,11 @@ It replaced the ResNet-50 baseline after winning a seeded comparison on validati
 Known weak spots: normal hand X-rays are still mostly flagged (specificity 0.30), and leg
 recall is 0.80 (24 / 30). Details are in [Phase 5](docs/phase-5-models.md).
 
+Where it looks ([Phase 6](docs/phase-6-explainability.md)): Grad-CAM heatmap peaks land on the
+radiologist's fracture box in 22.5% of test fractures, against 7.8% for an "image centre" guess
+and 1% by chance. None of the 18 missed fractures had the heatmap on the fracture: the misses are
+fractures the model never located, mostly in feet and ankles.
+
 How these numbers were kept honest:
 - **Leakage-safe split.** Near-duplicate and likely same-patient images never cross splits (Phase 1).
 - **Threshold pre-registered.** It was chosen on validation and committed to git before the test set was opened. The evaluation script refuses to run otherwise (Phase 3).

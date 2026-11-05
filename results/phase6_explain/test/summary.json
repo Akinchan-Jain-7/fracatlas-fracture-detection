@@ -1,0 +1,291 @@
+{
+  "phase": 6,
+  "split": "test",
+  "model": {
+    "run_name": "p5_convnext_tiny_s44",
+    "best_epoch": 4,
+    "trained_commit": "1f7d7c802ed3ed6419f72ed90431fa94942f24e5",
+    "split_name": "split_v1",
+    "split_csv_md5": "99cbcb06a8e71d67f5215fda47fad124"
+  },
+  "threshold": 0.096791435,
+  "layers": {
+    "primary": "stages.3",
+    "extra": [
+      "stages.2"
+    ]
+  },
+  "protocol": {
+    "analysis_plan": "configs/explain.yaml",
+    "plan_committed": true,
+    "plan_commit": "0e52ac7ea45ceb3ff5b3e38c6d94165224637735 2026-11-05T07:12:28+00:00",
+    "outcome_counts": {
+      "tp": 94,
+      "fp": 142,
+      "tn": 345,
+      "fn": 8
+    },
+    "committed_counts": {
+      "tp": 94,
+      "fp": 142,
+      "tn": 345,
+      "fn": 8
+    },
+    "max_prob_diff_fp32": 0.004989296197891235,
+    "run_at": "2026-11-05T07:32:02+0000",
+    "code": {
+      "commit": "fd696196f780c0cb12de56fb1fb30cfe24b2fad5",
+      "dirty": false
+    },
+    "device": "Tesla T4",
+    "seconds": 58.7,
+    "bootstrap": {
+      "n": 2000,
+      "seed": 0,
+      "alpha": 0.05,
+      "unit": "split_group"
+    }
+  },
+  "localization": {
+    "all": {
+      "n_images": 102,
+      "n_groups": 47,
+      "chance_hit_rate": 0.009582510959043585,
+      "centre_hit_rate": {
+        "n": 102,
+        "value": 0.0784313725490196,
+        "low": 0.010201504844361987,
+        "high": 0.1568627450980392
+      },
+      "stages.3": {
+        "hit_rate": {
+          "n": 102,
+          "value": 0.22549019607843138,
+          "low": 0.13541666666666666,
+          "high": 0.317649807586586
+        },
+        "energy_share_mean": 0.07759713250508779,
+        "energy_lift_median": 5.943764489451642,
+        "empty_maps": 0
+      },
+      "stages.2": {
+        "hit_rate": {
+          "n": 102,
+          "value": 0.35294117647058826,
+          "low": 0.23333333333333334,
+          "high": 0.4724431080730293
+        },
+        "energy_share_mean": 0.10040781913275457,
+        "energy_lift_median": 5.948326619279106,
+        "empty_maps": 0
+      }
+    },
+    "outcome=FN": {
+      "n_images": 8,
+      "n_groups": 6,
+      "chance_hit_rate": 0.005620659722222222,
+      "centre_hit_rate": {
+        "n": 8,
+        "value": 0.125,
+        "low": 0.0,
+        "high": 0.3333333333333333
+      },
+      "stages.3": {
+        "hit_rate": {
+          "n": 8,
+          "value": 0.0,
+          "low": 0.0,
+          "high": 0.0
+        },
+        "energy_share_mean": 0.013875782037146414,
+        "energy_lift_median": 1.5665167603176222,
+        "empty_maps": 0
+      },
+      "stages.2": {
+        "hit_rate": {
+          "n": 8,
+          "value": 0.125,
+          "low": 0.0,
+          "high": 0.3333333333333333
+        },
+        "energy_share_mean": 0.00754387662643849,
+        "energy_lift_median": 0.4708181687622315,
+        "empty_maps": 0
+      }
+    },
+    "outcome=TP": {
+      "n_images": 94,
+      "n_groups": 44,
+      "chance_hit_rate": 0.009919689787709234,
+      "centre_hit_rate": {
+        "n": 94,
+        "value": 0.07446808510638298,
+        "low": 0.010638297872340425,
+        "high": 0.14953271028037382
+      },
+      "stages.3": {
+        "hit_rate": {
+          "n": 94,
+          "value": 0.24468085106382978,
+          "low": 0.1470520777118187,
+          "high": 0.3510784428337619
+        },
+        "energy_share_mean": 0.08302022616193387,
+        "energy_lift_median": 6.790501762319723,
+        "empty_maps": 0
+      },
+      "stages.2": {
+        "hit_rate": {
+          "n": 94,
+          "value": 0.3723404255319149,
+          "low": 0.2413448275862069,
+          "high": 0.509813925570228
+        },
+        "energy_share_mean": 0.10831113338861127,
+        "energy_lift_median": 6.672495547700207,
+        "empty_maps": 0
+      }
+    },
+    "region=hand": {
+      "n_images": 54,
+      "n_groups": 27,
+      "chance_hit_rate": 0.005226800626954444,
+      "centre_hit_rate": {
+        "n": 54,
+        "value": 0.0,
+        "low": 0.0,
+        "high": 0.0
+      },
+      "stages.3": {
+        "hit_rate": {
+          "n": 54,
+          "value": 0.18518518518518517,
+          "low": 0.07407407407407407,
+          "high": 0.32
+        },
+        "energy_share_mean": 0.05037930805945207,
+        "energy_lift_median": 6.090615219862742,
+        "empty_maps": 0
+      },
+      "stages.2": {
+        "hit_rate": {
+          "n": 54,
+          "value": 0.3333333333333333,
+          "low": 0.18,
+          "high": 0.5
+        },
+        "energy_share_mean": 0.07770702975134075,
+        "energy_lift_median": 6.817085970276113,
+        "empty_maps": 0
+      }
+    },
+    "region=hip": {
+      "n_images": 1,
+      "n_groups": 1,
+      "chance_hit_rate": 0.031646825396825395,
+      "centre_hit_rate": {
+        "n": 1,
+        "value": 0.0,
+        "low": 0.0,
+        "high": 0.0
+      },
+      "stages.3": {
+        "hit_rate": {
+          "n": 1,
+          "value": 1.0,
+          "low": 1.0,
+          "high": 1.0
+        },
+        "energy_share_mean": 0.39251191348314335,
+        "energy_lift_median": 12.40288428811939,
+        "empty_maps": 0
+      },
+      "stages.2": {
+        "hit_rate": {
+          "n": 1,
+          "value": 1.0,
+          "low": 1.0,
+          "high": 1.0
+        },
+        "energy_share_mean": 0.14351803229382307,
+        "energy_lift_median": 4.534989860569707,
+        "empty_maps": 0
+      }
+    },
+    "region=leg": {
+      "n_images": 30,
+      "n_groups": 9,
+      "chance_hit_rate": 0.014187350866272434,
+      "centre_hit_rate": {
+        "n": 30,
+        "value": 0.23333333333333334,
+        "low": 0.0,
+        "high": 0.42310606060606043
+      },
+      "stages.3": {
+        "hit_rate": {
+          "n": 30,
+          "value": 0.26666666666666666,
+          "low": 0.09523809523809523,
+          "high": 0.40540540540540543
+        },
+        "energy_share_mean": 0.1098918629579258,
+        "energy_lift_median": 6.986802306395649,
+        "empty_maps": 0
+      },
+      "stages.2": {
+        "hit_rate": {
+          "n": 30,
+          "value": 0.43333333333333335,
+          "low": 0.18518518518518517,
+          "high": 0.6363636363636364
+        },
+        "energy_share_mean": 0.13309148267311155,
+        "energy_lift_median": 6.334128475949196,
+        "empty_maps": 0
+      }
+    },
+    "region=mixed": {
+      "n_images": 17,
+      "n_groups": 10,
+      "chance_hit_rate": 0.013994207798935716,
+      "centre_hit_rate": {
+        "n": 17,
+        "value": 0.058823529411764705,
+        "low": 0.0,
+        "high": 0.2
+      },
+      "stages.3": {
+        "hit_rate": {
+          "n": 17,
+          "value": 0.23529411764705882,
+          "low": 0.0,
+          "high": 0.5333333333333333
+        },
+        "energy_share_mean": 0.08853865165221325,
+        "energy_lift_median": 4.502835135139515,
+        "empty_maps": 0
+      },
+      "stages.2": {
+        "hit_rate": {
+          "n": 17,
+          "value": 0.23529411764705882,
+          "low": 0.0,
+          "high": 0.5333333333333333
+        },
+        "energy_share_mean": 0.11230326073419976,
+        "energy_lift_median": 3.756955176557841,
+        "empty_maps": 0
+      }
+    }
+  },
+  "sanity": null,
+  "figures": [
+    "figures/test_missed_fractures.png",
+    "figures/test_found_fractures.png",
+    "figures/test_hand_false_alarms.png",
+    "figures/test_other_false_alarms.png",
+    "figures/test_hardware.png",
+    "figures/test_cleared_normals.png"
+  ]
+}
