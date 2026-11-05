@@ -104,7 +104,102 @@ the Phase 5 sweep output as inputs. Outputs go to
 
 ## 5. Results
 
-*Pending: filled in from the Kaggle run.*
+**In short:** the heatmaps follow the fracture far more often than any
+baseline, they depend on the trained weights, and every missed fracture is a
+case where the model looked somewhere else. On X-rays with surgical hardware
+the heatmaps sit on the metal.
+
+Kaggle notebook `notebook2ac59126bb`, version 7, T4. Numbers below are from its log; the
+output files and figures are added to `results/phase6_explain/` and `docs/figures/phase-6/` next.
+Both splits reproduced the committed Phase 5 outcome counts exactly
+(validation TP 92 / FP 131 / TN 353 / FN 10; test 94 / 142 / 345 / 8). The
+plan was committed in `0e52ac7` before the run.
+
+### Pointing game (fractured images, 95% CIs over patient groups)
+
+| | Validation (102) | Test (102) |
+|---|---|---|
+| **Grad-CAM, `stages.3` (primary)** | **0.216** [0.126, 0.325] | **0.225** [0.135, 0.318] |
+| Grad-CAM, `stages.2` (secondary) | 0.353 [0.255, 0.449] | 0.353 [0.233, 0.472] |
+| centre of the image | 0.049 [0.011, 0.094] | 0.078 [0.010, 0.157] |
+| chance (box share of the image) | 0.008 | 0.010 |
+| heatmap mass inside the boxes, `stages.3` | 7.0% (boxes cover 0.8%) | 7.8% (boxes cover 1.0%) |
+
+- **Far above every baseline.** About 1 peak in 5 lands exactly in the box.
+  The boxes cover only about 1% of the image, so chance is 1 in 100, and the
+  "look at the centre" guess gets 1 in 13. The lower end of the test
+  interval (0.135) is above chance and above the centre guess's point
+  estimate (0.078), and test agrees with validation.
+- **It is a strict test.** One pixel, no margin, at a 32 px grid. Many misses
+  in the gallery are on the same bone a short distance from the box, which
+  the strict score counts as a miss.
+- **The finer layer hits more often** (0.35 vs 0.22). This was a secondary,
+  pre-declared comparison, so it is a lead for Phase 7 (localization), not
+  a claim.
+
+### Missed fractures: the model was not looking at them
+
+| | Validation | Test |
+|---|---|---|
+| Found fractures (TP), hit rate | 0.239 (92) | 0.245 (94) |
+| **Missed fractures (FN), hit rate** | **0 / 10** | **0 / 8** |
+
+Not one of the 18 missed fractures had its heatmap peak on the fracture.
+The misses are failures to *find* the fracture, not fractures the model
+found and then scored too low. Lowering the threshold would catch some of
+them only by flagging many more normal X-rays; the model needs to *see* them. In the test gallery
+(`test_missed_fractures.png`), six of the eight are leg X-rays, which
+matches the leg recall drop found in Phase 5. The peaks sit on soft tissue,
+on the image border, or on the wrong joint, and in two cases just beside the box.
+
+### Sanity check: the maps depend on the trained weights
+
+On 64 fractured validation images (trained hit rate 0.219 on these):
+
+| Weights re-initialised | Rank correlation with trained maps | Hit rate |
+|---|---|---|
+| head + last stage | 0.350 | 0.125 |
+| whole network | 0.136 | 0.031 |
+
+With the whole network random, the maps share little with the trained ones,
+and the hit rate falls to near the baselines. Grad-CAM passes the
+Adebayo test. With only the last stage random, a moderate correlation
+remains, as expected: the last stage still receives features from the
+trained earlier stages, so part of the map's layout survives.
+
+### What the galleries show (visual, not measured)
+
+These observations come from the pre-declared 12-image galleries. They
+are leads to test, not findings.
+
+- **Hardware.** On images with plates, rods or screws, the heat lies along
+  the metal (`test_hardware.png`). The model uses implants as evidence.
+  Phase 5 showed this is not the whole story (PR-AUC 0.825 without
+  hardware images), but a deployed tool must not treat a healed, plated
+  bone as a new fracture.
+- **Hand false alarms.** The most confident ones are mostly side
+  (lateral) views of the wrist and forearm, with the heat on the wrist,
+  where bones overlap. Distal-radius fractures are common there, so the
+  model seems to have learned "wrist on a side view" as a fracture
+  location. That fits Phase 5's low hand specificity.
+- **Other false alarms.** The peaks sit at the ends of long bones (knee,
+  ankle, elbow). Several of these X-rays look like children's limbs, where
+  growth plates are at those positions and can resemble a fracture line.
+  The dataset has no age field, so this cannot be checked directly.
+- **Found fractures.** When the peak misses the box, it is usually on the
+  same bone nearby. When the X-ray shows two views side by side, the heat
+  often goes to one view only.
+
+### What this means for the next phases
+
+- **Phase 7 (localization)** is worth doing. Grad-CAM points at the right
+  area well above chance, but not precisely enough to *mark* a fracture.
+  The boxes exist, and the finer layer already hits more often.
+- **Phase 8 (app)** should show the heatmap as "where the model looked",
+  not "where the fracture is", and should warn when hardware is present.
+
+The full tables, including per-region rates, are in
+`results/phase6_explain/{val,test}/report.md`.
 
 ## 6. Interview questions
 

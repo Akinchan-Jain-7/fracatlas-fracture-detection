@@ -69,7 +69,7 @@ pytest                                   # unit tests
 | 3 Evaluation | ✅ | [docs](docs/phase-3-evaluation.md): threshold pre-registered on val, test scored once. **Test recall 0.892 [0.825, 0.955] at specificity 0.548; PR-AUC 0.739 [0.625, 0.832]** (0.695 without hardware images) |
 | 4 Class imbalance | ✅ | [docs](docs/phase-4-imbalance.md): weighted BCE, balanced sampler, focal loss vs baseline, 3 seeds each, rule fixed before the runs. **No remedy helped**: all lowered val specificity at 90% recall (Δ −0.045 to −0.074); baseline kept |
 | 5 Model comparison | ✅ | [docs](docs/phase-5-models.md): 4 challengers × 3 seeds; **ConvNeXt-Tiny won** (val PR-AUC 0.709 → 0.814) and was **confirmed on test, scored once: recall 0.922 [0.859, 0.976] at specificity 0.708 [0.643, 0.764], PR-AUC 0.853** (baseline 0.892 / 0.548 / 0.739). It is now the current model. 448 px resolution gave nothing |
-| 6 Explainability | 🔨 running | [docs](docs/phase-6-explainability.md): Grad-CAM, scored against the radiologist fracture boxes (pointing game) vs chance, centre and random-weight baselines; plan and figure selection committed before any heatmap |
+| 6 Explainability | ✅ | [docs](docs/phase-6-explainability.md): Grad-CAM scored against the radiologist fracture boxes, plan committed first. **Test pointing-game hit rate 0.225 [0.135, 0.318]** vs centre guess 0.078 and chance 0.010; **0 of 18 missed fractures** had the heatmap on the fracture; random-weight maps fall to 0.03 (sanity check passed); heat follows surgical hardware |
 
 ## Quick start (Kaggle)
 
