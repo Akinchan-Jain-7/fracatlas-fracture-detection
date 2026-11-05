@@ -12,6 +12,7 @@ Pipeline (train): same, plus geometric + intensity augmentation before the tenso
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
 import torch
@@ -37,6 +38,36 @@ DEFAULT_AUGMENT: dict[str, Any] = {
 }
 
 
+@dataclass(frozen=True)
+class LetterboxGeometry:
+    """Where the image sits inside the ``size x size`` letterboxed square.
+
+    Grad-CAM (Phase 6) and the web app (Phase 8) need this to map between the
+    model's frame and the original X-ray: fracture boxes go in, heatmaps come out.
+    """
+
+    size: int
+    new_w: int
+    new_h: int
+    left: int
+    top: int
+
+    @property
+    def content(self) -> tuple[slice, slice]:
+        """Row and column slices of the image area (padding excluded)."""
+        return slice(self.top, self.top + self.new_h), slice(self.left, self.left + self.new_w)
+
+    def to_letterbox(self, x: float, y: float) -> tuple[float, float]:
+        """Normalised image coordinates (0..1, as in YOLO files) -> letterbox pixels."""
+        return self.left + x * self.new_w, self.top + y * self.new_h
+
+
+def letterbox_geometry(w: int, h: int, size: int) -> LetterboxGeometry:
+    scale = size / max(w, h)
+    new_w, new_h = max(1, round(w * scale)), max(1, round(h * scale))
+    return LetterboxGeometry(size, new_w, new_h, (size - new_w) // 2, (size - new_h) // 2)
+
+
 class Letterbox:
     """Resize so the LONG side equals ``size``, then pad to ``size x size``.
 
@@ -50,12 +81,10 @@ class Letterbox:
         self.fill = fill
 
     def __call__(self, img: Image.Image) -> Image.Image:
-        w, h = img.size
-        scale = self.size / max(w, h)
-        new_w, new_h = max(1, round(w * scale)), max(1, round(h * scale))
-        resized = img.resize((new_w, new_h), Image.Resampling.BILINEAR)
+        g = letterbox_geometry(*img.size, self.size)
+        resized = img.resize((g.new_w, g.new_h), Image.Resampling.BILINEAR)
         canvas = Image.new(img.mode, (self.size, self.size), self.fill)
-        canvas.paste(resized, ((self.size - new_w) // 2, (self.size - new_h) // 2))
+        canvas.paste(resized, (g.left, g.top))
         return canvas
 
     def __repr__(self) -> str:
@@ -127,3 +156,24 @@ def build_transforms(
         v2.Normalize(mean=p["mean"], std=p["std"]),
     ]
     return v2.Compose(steps)
+
+
+def eval_transform_with_geometry(
+    preprocess: dict[str, Any] | None = None,
+) -> Callable[[Image.Image], tuple[torch.Tensor, LetterboxGeometry]]:
+    """The eval pipeline, also returning where the image landed in the square.
+
+    Same steps (and so the same pixels) as ``build_transforms(train=False)``.
+    The geometry is taken from the image *after* the draft decode, because the
+    reduced-scale JPEG decode can change the size by a rounding pixel.
+    """
+    p = {**DEFAULT_PREPROCESS, **(preprocess or {})}
+    steps = build_transforms(p, train=False).transforms
+    decode, rest = steps[0], v2.Compose(steps[1:])
+    assert isinstance(decode, DraftGrayscale)
+
+    def apply(img: Image.Image) -> tuple[torch.Tensor, LetterboxGeometry]:
+        gray = decode(img)
+        return rest(gray), letterbox_geometry(*gray.size, p["image_size"])
+
+    return apply

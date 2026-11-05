@@ -1,0 +1,83 @@
+# Phase 6: Grad-CAM explainability for the current model (ConvNeXt-Tiny, seed 44).
+#
+# Everything below (layers, metrics, baselines, which images go in the galleries)
+# is fixed and committed BEFORE any heatmap is computed, the same pre-registration
+# idea as Phases 3-5. Grad-CAM changes no weights and no threshold, so looking at
+# test heatmaps cannot leak into the model. What could leak is the analysis: if we
+# tried layers or metric definitions until the test numbers looked good. Hence
+# this file.
+
+run_name: p5_convnext_tiny_s44
+# The operating threshold committed in Phase 5 (results/phase3_<run>/threshold.json).
+# Used only to label each image TP / FN / FP / TN for the case studies.
+threshold_file: results/phase3_p5_convnext_tiny_s44/threshold.json
+
+gradcam:
+  # Layers are given as indices into timm's feature_info (-1 = last stage).
+  # Primary (the one the claims are about): the last stage. That is standard
+  # Grad-CAM: the layer nearest the decision. For ConvNeXt-Tiny at 384 px it is
+  # stages.3, a 12x12 grid (one cell = 32 px).
+  primary_layer: -1
+  # Secondary, reported but not used for any claim: one stage earlier
+  # (stages.2, 24x24, one cell = 16 px). Finer grid, but further from the decision.
+  extra_layers: [-2]
+  # Explain the fracture logit for every image (normal ones too): red means
+  # "evidence for fracture". fp32 on purpose: gradients under AMP can underflow.
+  batch_size: 16
+
+localization:
+  # Ground truth: the FracAtlas YOLO boxes (every fractured image has >= 1).
+  # Metrics are computed in the model's 384 px letterboxed frame, inside the
+  # image area only (padding excluded).
+  #
+  # PRIMARY: pointing-game hit rate on fractured images = the heatmap's single
+  #   hottest pixel lies inside a fracture box (no tolerance margin).
+  # Secondary: energy-in-box = share of the (ReLU'd) heatmap mass that falls
+  #   inside the boxes, compared with the share of image area the boxes cover.
+  #
+  # Baselines every number is read against:
+  #   chance  - a uniformly random point lands in a box with probability = box
+  #             area share, so mean box area share is the chance hit rate.
+  #   centre  - a fixed "always look at the middle" heatmap (no model at all).
+  #   random  - the same network with randomly initialised weights (below).
+  # Grad-CAM must beat all three on validation before any test claim is made.
+  primary_metric: pointing_hit
+  # Hit rates by outcome (TP vs FN at the operating threshold) and by region.
+  groups: [outcome, region]
+
+sanity:
+  # Model-randomisation test (Adebayo et al., 2018, "Sanity Checks for Saliency
+  # Maps"): a heatmap method that still produces the same maps after the
+  # weights are scrambled is showing image edges, not what the model learned.
+  # Two levels: the head plus the last stage re-initialised, and the whole
+  # network re-initialised. Reported: Spearman rank correlation with the
+  # trained model's maps (should fall towards 0) and the random model's
+  # pointing-game hit rate (should fall towards chance).
+  n_images: 64          # fractured validation images, first 64 in split order
+  seed: 0
+  levels: [head_and_last_stage, full]
+
+galleries:
+  # Which images are shown is fixed here, so the figures cannot be cherry-picked.
+  seed: 0
+  per_figure: 12
+  figures:
+    - name: missed_fractures      # every fractured image below the threshold (FN)
+      select: {label: 1, outcome: FN}
+      order: prob_desc
+      take: all
+    - name: found_fractures       # random sample of true positives
+      select: {label: 1, outcome: TP}
+      order: random
+    - name: hand_false_alarms     # the most confident false alarms on normal hands
+      select: {label: 0, outcome: FP, region: hand}
+      order: prob_desc
+    - name: other_false_alarms    # the most confident false alarms elsewhere
+      select: {label: 0, outcome: FP, region_not: hand}
+      order: prob_desc
+    - name: hardware              # random images with surgical hardware
+      select: {hardware: 1}
+      order: random
+    - name: cleared_normals       # random true negatives (what "nothing here" looks like)
+      select: {label: 0, outcome: TN}
+      order: random
