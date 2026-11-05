@@ -1,0 +1,102 @@
+# Phase 7: fracture localisation with a box detector (torchvision Faster R-CNN).
+#
+# The whole protocol is fixed here and committed BEFORE training starts:
+# model, recipe, the epoch-selection rule, which seed is the reported model,
+# the metrics and the baselines. Nothing is tuned on the test set; the test
+# evaluation refuses to run unless this file is committed unchanged.
+_base_: base.yaml
+
+run_name: detect_frcnn_r50
+
+detector:
+  # Faster R-CNN v2 (ResNet-50 + FPN), pretrained on COCO detection. COCO has no
+  # X-rays, but a detector that already knows "propose a box, refine it" needs
+  # far fewer examples than one built from an ImageNet classifier.
+  name: fasterrcnn_resnet50_fpn_v2
+  pretrained: true          # COCO weights (download.pytorch.org)
+  num_classes: 2            # background + fracture
+  # Images are resized so the short side is min_size (long side <= max_size).
+  # 91% of FracAtlas X-rays are 373 x 454, so this upscales ~2x: fracture boxes
+  # cover ~1% of the image (~45 px at native size) and grow to ~90 px, a size
+  # the FPN anchors handle well.
+  min_size: 800
+  max_size: 1333
+  detections_per_img: 20
+  score_thresh: 0.01        # keep low-score boxes: AP and FROC need the full ranking
+
+data:
+  # Every fractured training image (all have boxes), plus an equal number of
+  # normal ones drawn afresh each epoch. Normal X-rays teach the detector what
+  # NOT to box; using all ~2,300 every epoch would mostly cost time.
+  negatives_per_positive: 1.0
+
+augment:
+  hflip_p: 0.5              # boxes are flipped with the image
+  brightness: 0.2
+  contrast: 0.2
+
+train:
+  epochs: 24
+  batch_size: 4
+  optimizer: sgd            # the standard Faster R-CNN recipe
+  lr: 0.005                 # 0.02 for batch 16 in the reference recipe, scaled to batch 4
+  momentum: 0.9
+  weight_decay: 0.0001
+  warmup_epochs: 1
+  min_lr_ratio: 0.01
+  amp: true
+  num_workers: 2
+  # Epoch selection: highest validation AP50 (all images). Stop when it has not
+  # improved for 6 epochs.
+  select_metric: ap50
+  early_stop_patience: 6
+
+# Two seeds train in parallel (one per GPU). Seed 42 is THE model: it is the
+# only one evaluated on test. Seed 43 is reported on validation only, to show
+# how much a re-run moves the numbers. Picking the better seed on validation
+# would be a (small) selection step, so neither is picked.
+seeds: [42, 43]
+reported_seed: 42
+
+evaluate:
+  # Ground truth: the FracAtlas YOLO boxes. All coordinates are normalised to
+  # the image (0..1), so the scores do not depend on the resize.
+  iou_threshold: 0.5
+  # PRIMARY: AP50 over ALL images of the split (fractured and normal), so a box
+  # drawn on a normal X-ray counts as a false positive.
+  primary: ap50_all
+  # Secondary:
+  #   ap50_fractured  - AP50 on fractured images only (how most papers report it)
+  #   ap25_all        - AP at IoU 0.25 (FracAtlas boxes are tight; a box that
+  #                     overlaps a quarter is often on the right fracture)
+  #   froc            - share of fracture boxes found at 0.5 / 1 / 2 false boxes
+  #                     per image (the clinical way to read a detector)
+  #   top1_pointing   - on fractured images, the centre of the highest-scoring
+  #                     box lies in a fracture box: the same test as the
+  #                     Phase 6 pointing game, so the two are directly comparable
+  #   top1_iou50      - the highest-scoring box overlaps a fracture box at IoU >= 0.5
+  froc_fp_per_image: [0.5, 1.0, 2.0]
+  # End-to-end: the classifier (Phase 5, threshold 0.0968) decides fracture
+  # yes/no and the detector marks where. Reported: of the fractures the
+  # classifier flags, how many get a correct top box.
+  classifier_run: p5_convnext_tiny_s44
+  classifier_threshold_file: results/phase3_p5_convnext_tiny_s44/threshold.json
+  bootstrap: {n: 2000, seed: 0, alpha: 0.05}   # resamples patient groups
+
+baselines:
+  # Grad-CAM boxes, no box training: threshold the Phase 6 heatmap (classifier,
+  # last stage) at half its peak, take the connected region around the peak,
+  # and box it. Score = the classifier's probability. One box per image.
+  gradcam_box:
+    layer: -1
+    relative_threshold: 0.5
+  # The detector must beat this to justify its existence.
+
+galleries:
+  # Fixed selection, chosen before looking. Test only.
+  seed: 0
+  per_figure: 12
+  figures:
+    - {name: found_fractures, select: {label: 1, top1_pointing: true}, order: random}
+    - {name: missed_fractures, select: {label: 1, top1_pointing: false}, order: random}
+    - {name: normals_with_boxes, select: {label: 0}, order: top_score_desc}
