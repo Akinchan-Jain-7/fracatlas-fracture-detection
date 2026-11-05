@@ -1,0 +1,90 @@
+project:
+  name: fracatlas-fracture-detection
+seed: 42
+paths:
+  data_dir: data/raw
+  output_dir: outputs
+  splits_dir: splits
+data:
+  source_url: https://ndownloader.figshare.com/files/65518038
+  archive_name: FracAtlas.zip
+  md5: fe9da2c7c285915ebee69dfdab8fd396
+  expected_num_images: 4083
+  expected_num_fractured: 719
+  negatives_per_positive: 1.0
+split:
+  name: split_v1
+  train: 0.7
+  val: 0.15
+  test: 0.15
+  n_folds: 20
+  seed: 42
+  hash_size: 16
+  duplicate_threshold: 11
+  group_threshold: 20
+  group_consecutive_ids: true
+run_name: detect_frcnn_r50_s42
+detector:
+  name: fasterrcnn_resnet50_fpn_v2
+  pretrained: true
+  num_classes: 2
+  min_size: 800
+  max_size: 1333
+  detections_per_img: 20
+  score_thresh: 0.01
+augment:
+  hflip_p: 0.5
+  brightness: 0.2
+  contrast: 0.2
+train:
+  epochs: 24
+  batch_size: 4
+  optimizer: sgd
+  lr: 0.005
+  momentum: 0.9
+  weight_decay: 0.0001
+  warmup_epochs: 1
+  min_lr_ratio: 0.01
+  amp: true
+  num_workers: 2
+  select_metric: ap50
+  early_stop_patience: 6
+seeds:
+- 42
+- 43
+reported_seed: 42
+evaluate:
+  iou_threshold: 0.5
+  primary: ap50_all
+  froc_fp_per_image:
+  - 0.5
+  - 1.0
+  - 2.0
+  classifier_run: p5_convnext_tiny_s44
+  classifier_threshold_file: results/phase3_p5_convnext_tiny_s44/threshold.json
+  bootstrap:
+    n: 2000
+    seed: 0
+    alpha: 0.05
+baselines:
+  gradcam_box:
+    layer: -1
+    relative_threshold: 0.5
+galleries:
+  seed: 0
+  per_figure: 12
+  figures:
+  - name: found_fractures
+    select:
+      label: 1
+      top1_pointing: true
+    order: random
+  - name: missed_fractures
+    select:
+      label: 1
+      top1_pointing: false
+    order: random
+  - name: normals_with_boxes
+    select:
+      label: 0
+    order: top_score_desc

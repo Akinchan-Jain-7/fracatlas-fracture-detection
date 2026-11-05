@@ -1,0 +1,15 @@
+2026-11-05 08:13:09 | INFO    | detect_s43 | run dir outputs/runs/20261105-081309_detect_frcnn_r50_s43
+2026-11-05 08:13:11 | INFO    | detect_s43 | train 2742 (483 fractured) | val 586 (102 fractured) | device cuda | amp True
+2026-11-05 08:13:45 | INFO    | detect_s43 | detector fasterrcnn_resnet50_fpn_v2 (pretrained=True): 43,030,809 trainable parameters
+2026-11-05 08:17:20 | INFO    | detect_s43 | epoch  1 | loss 0.1526 | val AP50 0.1538 | AP50 fract 0.2398 | top1 pointing 0.529 | sens@1fp 0.429 | 215s  *best*
+2026-11-05 08:20:49 | INFO    | detect_s43 | epoch  2 | loss 0.1215 | val AP50 0.3325 | AP50 fract 0.4215 | top1 pointing 0.676 | sens@1fp 0.593 | 208s  *best*
+2026-11-05 08:24:18 | INFO    | detect_s43 | epoch  3 | loss 0.1056 | val AP50 0.4577 | AP50 fract 0.5088 | top1 pointing 0.725 | sens@1fp 0.693 | 209s  *best*
+2026-11-05 08:27:47 | INFO    | detect_s43 | epoch  4 | loss 0.0946 | val AP50 0.5493 | AP50 fract 0.6075 | top1 pointing 0.755 | sens@1fp 0.714 | 209s  *best*
+2026-11-05 08:31:17 | INFO    | detect_s43 | epoch  5 | loss 0.0854 | val AP50 0.5102 | AP50 fract 0.5616 | top1 pointing 0.745 | sens@1fp 0.700 | 210s
+2026-11-05 08:34:45 | INFO    | detect_s43 | epoch  6 | loss 0.0755 | val AP50 0.4757 | AP50 fract 0.5333 | top1 pointing 0.765 | sens@1fp 0.643 | 208s
+2026-11-05 08:38:13 | INFO    | detect_s43 | epoch  7 | loss 0.0691 | val AP50 0.5099 | AP50 fract 0.5629 | top1 pointing 0.775 | sens@1fp 0.671 | 208s
+2026-11-05 08:41:43 | INFO    | detect_s43 | epoch  8 | loss 0.0582 | val AP50 0.5290 | AP50 fract 0.5685 | top1 pointing 0.755 | sens@1fp 0.664 | 209s
+2026-11-05 08:45:11 | INFO    | detect_s43 | epoch  9 | loss 0.0582 | val AP50 0.4959 | AP50 fract 0.5461 | top1 pointing 0.725 | sens@1fp 0.686 | 208s
+2026-11-05 08:48:39 | INFO    | detect_s43 | epoch 10 | loss 0.0508 | val AP50 0.5237 | AP50 fract 0.5555 | top1 pointing 0.784 | sens@1fp 0.657 | 209s
+2026-11-05 08:48:39 | INFO    | detect_s43 | early stop: no ap50_all gain for 6 epochs
+2026-11-05 08:48:39 | INFO    | detect_s43 | done: best epoch 4, val ap50_all 0.5493

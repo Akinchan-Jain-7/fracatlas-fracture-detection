@@ -1,0 +1,174 @@
+{
+  "phase": 7,
+  "split": "val",
+  "detector": {
+    "run": "20261105-081309_detect_frcnn_r50_s43",
+    "seed": 43,
+    "epoch": 4,
+    "trained_commit": "8b672437c9d17e470a3fe2e6ed6081767cd1c802",
+    "val_at_selection": {
+      "n_images": 586,
+      "n_fractured": 102,
+      "n_gt_boxes": 140,
+      "ap50_all": 0.5492608125182254,
+      "ap50_fractured": 0.6074905027755281,
+      "ap25_all": 0.6349034338732853,
+      "sens_at_0.5_fp": 0.6714285714285714,
+      "sens_at_1_fp": 0.7142857142857143,
+      "sens_at_2_fp": 0.7571428571428571,
+      "top1_pointing": 0.7549019607843137,
+      "top1_iou50": 0.6568627450980392,
+      "boxes_per_normal_at_0.5": 0.10330578512396695
+    }
+  },
+  "protocol": {
+    "plan": "configs/detect.yaml",
+    "plan_committed": true,
+    "plan_commit": "8b672437c9d17e470a3fe2e6ed6081767cd1c802 2026-11-05T08:01:41+00:00",
+    "rerun_reason": null,
+    "classifier_counts": {
+      "tp": 92,
+      "fp": 131,
+      "tn": 353,
+      "fn": 10
+    },
+    "classifier_committed_counts": {
+      "tp": 92,
+      "fp": 131,
+      "tn": 353,
+      "fn": 10
+    },
+    "code": {
+      "commit": "8b672437c9d17e470a3fe2e6ed6081767cd1c802",
+      "dirty": false
+    },
+    "evaluated_at": "2026-11-05T08:54:18+0000",
+    "device": "Tesla T4",
+    "seconds": 82.2
+  },
+  "detector_metrics": {
+    "point": {
+      "n_images": 586,
+      "n_fractured": 102,
+      "n_gt_boxes": 140,
+      "ap50_all": 0.5492608125182254,
+      "ap50_fractured": 0.6074905027755281,
+      "ap25_all": 0.6349034338732853,
+      "sens_at_0.5_fp": 0.6714285714285714,
+      "sens_at_1_fp": 0.7142857142857143,
+      "sens_at_2_fp": 0.7571428571428571,
+      "top1_pointing": 0.7549019607843137,
+      "top1_iou50": 0.6568627450980392,
+      "boxes_per_normal_at_0.5": 0.10330578512396695
+    },
+    "ci95": {
+      "ap50_all": {
+        "value": 0.5492608125182254,
+        "low": 0.41619398476298974,
+        "high": 0.6577748229815196
+      },
+      "ap50_fractured": {
+        "value": 0.6074905027755281,
+        "low": 0.49804852068661165,
+        "high": 0.7039492320918277
+      },
+      "ap25_all": {
+        "value": 0.6349034338732853,
+        "low": 0.5051606913027159,
+        "high": 0.7312723292574704
+      },
+      "sens_at_1_fp": {
+        "value": 0.7142857142857143,
+        "low": 0.6032916336465527,
+        "high": 0.7975635023140673
+      },
+      "top1_pointing": {
+        "value": 0.7549019607843137,
+        "low": 0.6428571428571429,
+        "high": 0.8518518518518519
+      },
+      "top1_iou50": {
+        "value": 0.6568627450980392,
+        "low": 0.5408052351375333,
+        "high": 0.7654320987654321
+      }
+    }
+  },
+  "gradcam_box_metrics": {
+    "point": {
+      "n_images": 586,
+      "n_fractured": 102,
+      "n_gt_boxes": 140,
+      "ap50_all": 0.0013896987366375122,
+      "ap50_fractured": 0.0014182194616977227,
+      "ap25_all": 0.018932515090978475,
+      "sens_at_0.5_fp": 0.02142857142857143,
+      "sens_at_1_fp": 0.02142857142857143,
+      "sens_at_2_fp": 0.02142857142857143,
+      "top1_pointing": 0.3431372549019608,
+      "top1_iou50": 0.029411764705882353,
+      "boxes_per_normal_at_0.5": 0.03925619834710744
+    },
+    "ci95": {
+      "ap50_all": {
+        "value": 0.0013896987366375122,
+        "low": 0.0,
+        "high": 0.013274707513584207
+      },
+      "ap50_fractured": {
+        "value": 0.0014182194616977227,
+        "low": 0.0,
+        "high": 0.01353414467305706
+      },
+      "ap25_all": {
+        "value": 0.018932515090978475,
+        "low": 0.004594994940920237,
+        "high": 0.05746956573769165
+      },
+      "sens_at_1_fp": {
+        "value": 0.02142857142857143,
+        "low": 0.0,
+        "high": 0.0625140765765765
+      },
+      "top1_pointing": {
+        "value": 0.3431372549019608,
+        "low": 0.23809523809523808,
+        "high": 0.45921723952738974
+      },
+      "top1_iou50": {
+        "value": 0.029411764705882353,
+        "low": 0.0,
+        "high": 0.08435657523711858
+      }
+    }
+  },
+  "top1_pointing_by_region": {
+    "hand": {
+      "n": 54,
+      "det_top1_pointing": 0.8888888888888888,
+      "cam_top1_pointing": 0.3888888888888889
+    },
+    "hip": {
+      "n": 2,
+      "det_top1_pointing": 1.0,
+      "cam_top1_pointing": 0.0
+    },
+    "leg": {
+      "n": 31,
+      "det_top1_pointing": 0.6451612903225806,
+      "cam_top1_pointing": 0.25806451612903225
+    },
+    "mixed": {
+      "n": 15,
+      "det_top1_pointing": 0.4666666666666667,
+      "cam_top1_pointing": 0.4
+    }
+  },
+  "end_to_end": {
+    "fractures": 102,
+    "flagged_by_classifier": 92,
+    "flagged_and_detector_top1_pointing": 73,
+    "flagged_and_detector_top1_iou50": 64
+  },
+  "figures": []
+}

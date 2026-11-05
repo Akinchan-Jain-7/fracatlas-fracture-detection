@@ -31,6 +31,10 @@ radiologist's fracture box in 22.5% of test fractures, against 7.8% for an "imag
 and 1% by chance. None of the 18 missed fractures had the heatmap on the fracture: the misses are
 fractures the model never located, mostly in feet and ankles.
 
+Where the fracture is ([Phase 7](docs/phase-7-localization.md)): a box detector's top box lands on
+the fracture in 74.5% of test fractures, and marks 72 of the 94 fractures the classifier flags.
+It is unreliable on X-rays with surgical hardware, where it boxes the implant.
+
 How these numbers were kept honest:
 - **Leakage-safe split.** Near-duplicate and likely same-patient images never cross splits (Phase 1).
 - **Threshold pre-registered.** It was chosen on validation and committed to git before the test set was opened. The evaluation script refuses to run otherwise (Phase 3).
@@ -75,7 +79,7 @@ pytest                                   # unit tests
 | 4 Class imbalance | ✅ | [docs](docs/phase-4-imbalance.md): weighted BCE, balanced sampler, focal loss vs baseline, 3 seeds each, rule fixed before the runs. **No remedy helped**: all lowered val specificity at 90% recall (Δ −0.045 to −0.074); baseline kept |
 | 5 Model comparison | ✅ | [docs](docs/phase-5-models.md): 4 challengers × 3 seeds; **ConvNeXt-Tiny won** (val PR-AUC 0.709 → 0.814) and was **confirmed on test, scored once: recall 0.922 [0.859, 0.976] at specificity 0.708 [0.643, 0.764], PR-AUC 0.853** (baseline 0.892 / 0.548 / 0.739). It is now the current model. 448 px resolution gave nothing |
 | 6 Explainability | ✅ | [docs](docs/phase-6-explainability.md): Grad-CAM scored against the radiologist fracture boxes, plan committed first. **Test pointing-game hit rate 0.225 [0.135, 0.318]** vs centre guess 0.078 and chance 0.010; **0 of 18 missed fractures** had the heatmap on the fracture; random-weight maps fall to 0.03 (sanity check passed); heat follows surgical hardware |
-| 7 Localisation | 🔨 training | [docs](docs/phase-7-localization.md): Faster R-CNN (torchvision, COCO-pretrained) trained on the fracture boxes, vs Grad-CAM boxes; AP50 with normal X-rays included, FROC, Phase 6 pointing game; plan committed before training, seed 42 tested once |
+| 7 Localisation | ✅ | [docs](docs/phase-7-localization.md): Faster R-CNN (torchvision, COCO-pretrained) trained on the fracture boxes, plan committed first, seed 42 tested once. **Test: top box on the fracture 0.745 [0.650, 0.837]** (Grad-CAM boxes 0.304), **AP50 0.421** with normal X-rays included, 64% of fracture boxes at 1 false box per image. Weak on surgical hardware (4 / 11) |
 
 ## Quick start (Kaggle)
 

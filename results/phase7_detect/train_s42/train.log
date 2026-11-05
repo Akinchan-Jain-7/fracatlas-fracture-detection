@@ -1,0 +1,16 @@
+2026-11-05 08:13:09 | INFO    | detect_s42 | run dir outputs/runs/20261105-081309_detect_frcnn_r50_s42
+2026-11-05 08:13:11 | INFO    | detect_s42 | train 2742 (483 fractured) | val 586 (102 fractured) | device cuda | amp True
+2026-11-05 08:13:45 | INFO    | detect_s42 | detector fasterrcnn_resnet50_fpn_v2 (pretrained=True): 43,030,809 trainable parameters
+2026-11-05 08:17:19 | INFO    | detect_s42 | epoch  1 | loss 0.1621 | val AP50 0.1191 | AP50 fract 0.2123 | top1 pointing 0.618 | sens@1fp 0.429 | 213s  *best*
+2026-11-05 08:20:41 | INFO    | detect_s42 | epoch  2 | loss 0.1241 | val AP50 0.4271 | AP50 fract 0.5036 | top1 pointing 0.784 | sens@1fp 0.686 | 203s  *best*
+2026-11-05 08:24:05 | INFO    | detect_s42 | epoch  3 | loss 0.1082 | val AP50 0.4393 | AP50 fract 0.5145 | top1 pointing 0.725 | sens@1fp 0.636 | 203s  *best*
+2026-11-05 08:27:28 | INFO    | detect_s42 | epoch  4 | loss 0.0972 | val AP50 0.4744 | AP50 fract 0.5477 | top1 pointing 0.755 | sens@1fp 0.693 | 202s  *best*
+2026-11-05 08:30:50 | INFO    | detect_s42 | epoch  5 | loss 0.0846 | val AP50 0.5459 | AP50 fract 0.6076 | top1 pointing 0.794 | sens@1fp 0.721 | 202s  *best*
+2026-11-05 08:34:12 | INFO    | detect_s42 | epoch  6 | loss 0.0766 | val AP50 0.4220 | AP50 fract 0.5077 | top1 pointing 0.745 | sens@1fp 0.664 | 201s
+2026-11-05 08:37:35 | INFO    | detect_s42 | epoch  7 | loss 0.0704 | val AP50 0.5122 | AP50 fract 0.5941 | top1 pointing 0.765 | sens@1fp 0.686 | 204s
+2026-11-05 08:40:59 | INFO    | detect_s42 | epoch  8 | loss 0.0628 | val AP50 0.5031 | AP50 fract 0.5713 | top1 pointing 0.745 | sens@1fp 0.679 | 204s
+2026-11-05 08:44:23 | INFO    | detect_s42 | epoch  9 | loss 0.0557 | val AP50 0.5328 | AP50 fract 0.5822 | top1 pointing 0.745 | sens@1fp 0.693 | 203s
+2026-11-05 08:47:46 | INFO    | detect_s42 | epoch 10 | loss 0.0499 | val AP50 0.5455 | AP50 fract 0.6066 | top1 pointing 0.804 | sens@1fp 0.721 | 203s
+2026-11-05 08:51:09 | INFO    | detect_s42 | epoch 11 | loss 0.0451 | val AP50 0.5421 | AP50 fract 0.5826 | top1 pointing 0.794 | sens@1fp 0.707 | 203s
+2026-11-05 08:51:09 | INFO    | detect_s42 | early stop: no ap50_all gain for 6 epochs
+2026-11-05 08:51:09 | INFO    | detect_s42 | done: best epoch 5, val ap50_all 0.5459

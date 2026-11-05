@@ -48,9 +48,10 @@ def plot_detection_gallery(
         for g in res.gt:
             _rect(ax, g, w, h, GT_COLOR, 1.4)
         order = np.argsort(-res.scores, kind="stable")
-        for rank, j in enumerate(order):
-            if rank > 0 and res.scores[j] < SHOW_SCORE:
-                break
+        shown = [(rank, j) for rank, j in enumerate(order)
+                 if rank == 0 or res.scores[j] >= SHOW_SCORE]  # fmt: skip
+        # Lowest score first, top box last: its outline and score are drawn on top.
+        for rank, j in reversed(shown):
             b = res.boxes[j]
             top = rank == 0
             _rect(ax, b, w, h, TOP_COLOR if top else OTHER_COLOR, 1.8 if top else 1.0,

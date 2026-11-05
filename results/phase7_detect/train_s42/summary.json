@@ -1,0 +1,34 @@
+{
+  "run_name": "detect_frcnn_r50_s42",
+  "seed": 42,
+  "best_epoch": 5,
+  "epochs_run": 11,
+  "val_ap50_all": 0.5459295979670541,
+  "val_best": {
+    "epoch": 5,
+    "lr": 0.0046396880262525595,
+    "train_loss": 0.08458700898081135,
+    "train_loss_classifier": 0.03245847087249129,
+    "train_loss_box_reg": 0.046596976581582204,
+    "train_loss_objectness": 0.003788050358013165,
+    "train_loss_rpn_box_reg": 0.001743511168724694,
+    "val_ap50_all": 0.5459295979670541,
+    "val_ap50_fractured": 0.6076166972009034,
+    "val_ap25_all": 0.6405879876236544,
+    "val_sens_at_0.5_fp": 0.6571428571428571,
+    "val_sens_at_1_fp": 0.7214285714285714,
+    "val_sens_at_2_fp": 0.7642857142857142,
+    "val_top1_pointing": 0.7941176470588235,
+    "val_top1_iou50": 0.6862745098039216,
+    "val_boxes_per_normal_at_0.5": 0.2644628099173554,
+    "seconds": 202.5
+  },
+  "n_train": 2742,
+  "n_val": 586,
+  "git": {
+    "commit": "8b672437c9d17e470a3fe2e6ed6081767cd1c802",
+    "dirty": false
+  },
+  "split_csv_md5": "99cbcb06a8e71d67f5215fda47fad124",
+  "device": "Tesla T4"
+}

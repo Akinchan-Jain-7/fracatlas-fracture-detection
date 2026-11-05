@@ -106,7 +106,106 @@ classifier). The script also saves the reported detector's weights,
 
 ## 5. Results
 
-*Pending: filled in from the Kaggle run.*
+**In short:** the detector's top box lands on the fracture in **3 of 4** test
+fractures (Grad-CAM: under 1 in 3), and it finds **64% of fracture boxes at one
+false box per image**. Its weak spot is surgical hardware: it boxes the
+implant. The Grad-CAM box baseline is far behind on every score.
+
+Kaggle notebook `notebook2ac59126bb`, version 8 (T4 x2, 44 min, code
+`8b67243`, the commit that also holds the plan). Both splits reproduced the
+committed Phase 5 classifier counts exactly. Files, checksums and provenance:
+`results/phase7_detect/`.
+
+### Training
+
+| | Seed 42 (reported) | Seed 43 |
+|---|---|---|
+| Best epoch (of 24 allowed) | 5 | 4 |
+| Epochs run (early stop) | 11 | 10 |
+| Validation AP50, all images | 0.546 | 0.549 |
+| Validation top-box pointing | 0.794 | 0.755 |
+| Normal X-rays with a box scoring ≥ 0.5 | 0.26 per image | 0.10 per image |
+
+![Validation by epoch](figures/phase-7/val_by_epoch.png)
+
+Validation AP50 climbs for 4–5 epochs, then levels off near 0.55 with
+epoch-to-epoch swings of about ±0.05. That is a plateau, not a collapse:
+with ~500 fractured training X-rays the detector learns what it can quickly.
+The two seeds agree closely on AP50; they differ more in how many boxes they
+put on normal X-rays.
+
+### Test (scored once, seed 42; 589 X-rays, 102 fractured, 148 fracture boxes)
+
+| Metric | Detector [95% CI] | Grad-CAM boxes |
+|---|---|---|
+| **AP50, all images (primary)** | **0.421** [0.296, 0.528] | 0.001 [0.000, 0.003] |
+| AP50, fractured images only | 0.508 [0.388, 0.615] | 0.001 |
+| AP at IoU 0.25, all images | 0.553 [0.418, 0.663] | 0.024 |
+| Fracture boxes found at 0.5 / 1 / 2 false boxes per image | 0.554 / **0.635** [0.535, 0.746] / 0.703 | 0.014 / 0.014 / 0.014 |
+| **Top box centre in a fracture box** (Phase 6 test) | **0.745** [0.650, 0.837] | 0.304 [0.203, 0.410] |
+| Top box IoU ≥ 0.5 | 0.559 [0.440, 0.670] | 0.020 |
+
+Validation (seed 42) for comparison: AP50 0.546 [0.420, 0.654], top-box
+pointing 0.794, 0.721 of boxes at one false box per image.
+
+- **Far ahead of the baseline.** Grad-CAM boxes are almost never tight enough
+  to count (the half-peak region on a 12 × 12 grid covers far more than the
+  fracture), and even their centre lands on the fracture only 30% of the time.
+  The detector's top box does so 75% of the time.
+- **Test is below validation**, with overlapping intervals (AP50 0.42 vs
+  0.55). Part of the gap is expected: the epoch was chosen by validation
+  AP50, which flatters validation a little. The pointing rate held up
+  (0.79 → 0.75).
+- **By region (test, top-box pointing):** hand 0.741 (54), leg 0.767 (30),
+  mixed 0.706 (17). The leg problem of Phases 5–6 does not carry over: a
+  detector trained on boxes finds leg fractures as well as hand ones.
+
+### End to end (classifier decides, detector marks)
+
+| | Validation | Test |
+|---|---|---|
+| Fractures | 102 | 102 |
+| Flagged by the classifier | 92 | 94 |
+| ...and the top box on the fracture | 74 | 72 |
+| ...and the top box outlining it (IoU ≥ 0.5) | 64 | 54 |
+
+Of the test fractures the classifier flags, the detector marks **72 of 94**
+correctly (77%).
+
+### Where it fails
+
+From `test_per_image.csv` and the galleries (selection fixed in the plan):
+
+- **Surgical hardware.** Only **4 of 11** test fractures with plates or screws
+  get the top box on the fracture (non-hardware: 0.79). In the gallery the top
+  box sits on the implant. Hardware images are 7 of the 26 misses. The
+  classifier had the same habit (Phase 6), and the app must say so.
+- **Near misses are rare.** Only 5 of the 26 missed top boxes overlap a
+  fracture box at all. When the detector misses, its top box is usually
+  somewhere else in the image, not just beside the fracture.
+- **Confident boxes on normal X-rays** sit on the wrist of side views and on
+  ankles, the same places the classifier's false alarms pointed to in Phase 6.
+  About 1 normal X-ray in 5 gets a box scoring ≥ 0.5 (99 of 487). The
+  classifier clears 46 of those 99, which is why the app shows boxes only on
+  X-rays the classifier flags, never on their own.
+
+![Found fractures](figures/phase-7/test_found_fractures.png)
+
+![Missed fractures](figures/phase-7/test_missed_fractures.png)
+
+![Normal X-rays with the most confident boxes](figures/phase-7/test_normals_with_boxes.png)
+
+(In these three figures, a top box's score label can be hidden under another
+box's label; the drawing order was fixed afterwards in `figures.py`. The
+scores themselves are in `test_detections.csv`.)
+
+### What this means for Phase 8
+
+- Use **seed 42, epoch 5** (`detector_s42_best.pt`, 166 MB, kept outside git).
+- Show the detector's top box on X-rays **the classifier flags**, labelled as
+  "most likely fracture location", with further boxes above a score cut-off
+  chosen on validation, not test.
+- Warn when the X-ray contains hardware: boxes there are unreliable.
 
 ## 6. Interview questions
 
