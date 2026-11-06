@@ -137,11 +137,26 @@ About 0.2–0.4 s for the classifier and heatmap and 3–4 s for the detector pe
 X-ray on a 4-core CPU; the first request after start-up is slower. The page
 shows a scanning animation while it waits. Uploads are capped at 15 MB, JPEG or PNG.
 
-## 7. Deployment
+## 7. Deployment (Hugging Face)
 
-*Next step, done together:* choosing a host (Hugging Face Spaces is the
-likely fit: free Docker hosting with enough memory for both models) and
-deciding how the model files reach it.
+```
+GitHub repo (code)  ──tarball of main──►  Space akinchanJain7/fracture-check  ──► public app
+HF model repo akinchanJain7/fracture-check-models  ──two .pt files──┘
+```
+
+- **Model repo** `akinchanJain7/fracture-check-models` (public): the two `.pt`
+  files plus a model card (`deploy/huggingface/models/README.md`).
+- **Space** `akinchanJain7/fracture-check` (Docker, CPU basic, free): holds only
+  `deploy/huggingface/space/README.md` (Space settings and page) and
+  `deploy/huggingface/space/Dockerfile`. While building, the Space downloads the
+  latest GitHub code and the models, and **verifies the models during the build**,
+  so a bad file fails the build instead of producing a broken live app.
+- **Updating:** push to GitHub, then *Settings → Factory rebuild* in the Space.
+  Docker only re-runs the steps after the code download; PyTorch and the models stay
+  cached unless the model repo's files changed.
+- Why not push the whole repo to the Space: Hugging Face repos store binary files
+  (figures, fonts) through LFS/Xet, and the Space would then hold a second copy
+  of the code. Fetching from GitHub keeps one source of truth.
 
 ## 8. Interview questions
 
