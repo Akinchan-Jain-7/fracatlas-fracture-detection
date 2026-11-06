@@ -1,15 +1,22 @@
 # Bone Fracture Detection from X-rays (FracAtlas)
 
-> 🚧 Work in progress, built phase by phase. Results tables, Grad-CAM examples and
-> the live demo link will be added only from real, logged runs.
+[![CI](https://github.com/Akinchan-Jain-7/fracatlas-fracture-detection/actions/workflows/ci.yml/badge.svg)](https://github.com/Akinchan-Jain-7/fracatlas-fracture-detection/actions/workflows/ci.yml)
+[![Live demo](https://img.shields.io/badge/demo-Hugging%20Face%20Space-blue)](https://huggingface.co/spaces/akinchanJain7/fracture-check)
+[![Models](https://img.shields.io/badge/models-Hugging%20Face-blue)](https://huggingface.co/akinchanJain7/fracture-detection-model)
 
-Binary fracture classification (and later localization) on musculoskeletal
-radiographs from the [FracAtlas](https://doi.org/10.6084/m9.figshare.22363012)
-dataset: 4,083 X-rays, about 18% fractured.
+Screens hand, arm, leg and hip X-rays for fractures. A ConvNeXt-Tiny classifier
+scores the X-ray against a threshold fixed before testing, Grad-CAM shows where it
+looked, and a Faster R-CNN detector marks where the break most likely is. Trained
+and evaluated on the [FracAtlas](https://doi.org/10.6084/m9.figshare.22363012)
+dataset (4,083 X-rays, about 18% fractured), with a leakage-safe split and a test
+set scored once.
+
+**Try it:** [Fracture Check on Hugging Face](https://huggingface.co/spaces/akinchanJain7/fracture-check)
+(upload an X-ray; the free Space may take a minute to wake up).
 
 **Not a medical device. For education and research only.**
 
-## Results so far
+## Results
 
 Current model: ConvNeXt-Tiny (ImageNet-22k pretrained), fine-tuned on grayscale 384 px X-rays.
 It replaced the ResNet-50 baseline after winning a seeded comparison on validation (Phase 5).
