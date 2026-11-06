@@ -1,0 +1,10 @@
+# Installed when the Space builds. CPU-only PyTorch: the Space has no GPU, and the
+# default wheels would add ~2.5 GB of CUDA.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.6.0+cpu
+torchvision==0.21.0+cpu
+# The project's dependencies (timm, numpy, pandas, pillow, pyyaml, matplotlib, fastapi,
+# uvicorn, ...), installed from the GitHub repo. app.py loads the code itself fresh
+# at every start, so this only needs re-running when dependencies change.
+fracdet[serve] @ https://github.com/Akinchan-Jain-7/fracatlas-fracture-detection/archive/refs/heads/main.tar.gz
+huggingface_hub>=1.16

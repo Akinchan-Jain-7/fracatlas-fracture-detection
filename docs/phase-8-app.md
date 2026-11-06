@@ -146,14 +146,16 @@ HF model repo akinchanJain7/fracture-detection-model  ──two .pt files──�
 
 - **Model repo** `akinchanJain7/fracture-detection-model` (public): the two `.pt`
   files plus a model card (`deploy/huggingface/models/README.md`).
-- **Space** `akinchanJain7/fracture-check` (Docker, CPU basic, free): holds only
-  `deploy/huggingface/space/README.md` (Space settings and page) and
-  `deploy/huggingface/space/Dockerfile`. While building, the Space downloads the
-  latest GitHub code and the models, and **verifies the models during the build**,
-  so a bad file fails the build instead of producing a broken live app.
-- **Updating:** push to GitHub, then *Settings → Factory rebuild* in the Space.
-  Docker only re-runs the steps after the code download; PyTorch and the models stay
-  cached unless the model repo's files changed.
+- **Space** `akinchanJain7/fracture-check` (free, CPU basic). Docker Spaces need a
+  paid plan, so the Space uses the free Gradio SDK, which simply runs `app.py` and
+  shows whatever listens on port 7860. Our `app.py` (`deploy/huggingface/space/`)
+  downloads the latest GitHub code and the two models at start-up, then serves the
+  same FastAPI app as locally. The app verifies both models before answering.
+  `requirements.txt` installs CPU PyTorch and the project's dependencies.
+- **Updating:** push to GitHub, then *Restart* the Space: it fetches the new code at
+  start-up. A change to dependencies needs *Factory rebuild* (reinstalls requirements).
+- `deploy/huggingface/space-docker/` keeps the Docker-Space version (Dockerfile that
+  verifies the models at build time), for a paid Space or any Docker host.
 - Why not push the whole repo to the Space: Hugging Face repos store binary files
   (figures, fonts) through LFS/Xet, and the Space would then hold a second copy
   of the code. Fetching from GitHub keeps one source of truth.
