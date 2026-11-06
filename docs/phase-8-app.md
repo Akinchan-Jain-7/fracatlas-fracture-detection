@@ -8,6 +8,11 @@ Docker so it runs the same way on any computer or host.
 Nothing here changes a model, a threshold or a result: the app loads exactly
 the Phase 5 classifier and the Phase 7 detector, and checks that it has.
 
+**Live:** [huggingface.co/spaces/akinchanJain7/fracture-check](https://huggingface.co/spaces/akinchanJain7/fracture-check)
+(direct: [akinchanjain7-fracture-check.hf.space](https://akinchanjain7-fracture-check.hf.space)).
+A free Space sleeps after a while without visitors; the first visit then takes a
+minute or two to wake it.
+
 ## 1. How the pieces fit
 
 ```
@@ -146,12 +151,21 @@ HF model repo akinchanJain7/fracture-detection-model  ──two .pt files──�
 
 - **Model repo** `akinchanJain7/fracture-detection-model` (public): the two `.pt`
   files plus a model card (`deploy/huggingface/models/README.md`).
-- **Space** `akinchanJain7/fracture-check` (free, CPU basic). Docker Spaces need a
-  paid plan, so the Space uses the free Gradio SDK, which simply runs `app.py` and
-  shows whatever listens on port 7860. Our `app.py` (`deploy/huggingface/space/`)
+- **Space** `akinchanJain7/fracture-check` (free). Docker Spaces need a paid plan,
+  so the Space uses the free Gradio SDK, which simply runs `app.py` and shows
+  whatever listens on port 7860. Our `app.py` (`deploy/huggingface/space/`)
   downloads the latest GitHub code and the two models at start-up, then serves the
   same FastAPI app as locally. The app verifies both models before answering.
-  `requirements.txt` installs CPU PyTorch and the project's dependencies.
+- **ZeroGPU, and the two rules it brings.** Free Gradio Spaces now run only on
+  ZeroGPU hardware (CPU basic needs PRO). ZeroGPU (1) accepts only certain PyTorch
+  versions (2.8.0 to 2.13.0 at the time), so `requirements.txt` pins torch 2.8.0 /
+  torchvision 0.23.0, and (2) stops an app that has not reported a `@spaces.GPU`
+  function at start-up. `spaces` normally sends that report when a Gradio app calls
+  `launch()`; ours serves FastAPI, so `app.py` declares one placeholder GPU function
+  and sends the report itself (`report_zerogpu_ready`). The models still run on the
+  CPU: about 0.2 s for classifier and heatmap and 0.9 s for the detector per X-ray
+  on the Space. This was tested locally by running the app's tests with ZeroGPU's
+  environment simulated (its PyTorch patches active, a stand-in for its API).
 - **Updating:** push to GitHub, then *Restart* the Space: it fetches the new code at
   start-up. A change to dependencies needs *Factory rebuild* (reinstalls requirements).
 - `deploy/huggingface/space-docker/` keeps the Docker-Space version (Dockerfile that
@@ -161,6 +175,13 @@ HF model repo akinchanJain7/fracture-detection-model  ──two .pt files──�
   of the code. Fetching from GitHub keeps one source of truth.
 
 ## 8. Interview questions
+
+**Q: The free Space runs on ZeroGPU. Does your app use the GPU?**
+No. ZeroGPU lends a GPU only inside functions marked `@spaces.GPU`, and stops an app
+that reports none. The app declares one placeholder so the Space stays up, and
+runs both models on the CPU, about 1 s per X-ray, exactly the code tested locally.
+Moving inference into a `@spaces.GPU` function would be faster but ties the app
+to Hugging Face and to its daily GPU quota per visitor.
 
 **Q: Why FastAPI?**
 It is a small Python web framework, so the models stay in the same language
