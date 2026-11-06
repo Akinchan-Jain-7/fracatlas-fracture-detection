@@ -82,7 +82,7 @@ X-ray. Emergency numbers are listed for India, the EU, the UK and the US.
 
 | File | Where from |
 |---|---|
-| `models/classifier_convnext_tiny_s44.pt` | Kaggle `notebook34061d5c16` v2 output: `outputs/runs/20261104-110146_p5_convnext_tiny_s44/best.pt` |
+| `models/classifier_convnext_tiny_s44.pt` | Kaggle `notebook34061d5c16` v2 output: `outputs/runs/20261104-110146_p5_convnext_tiny_s44/best.pt` (111.36 MB, SHA-256 `f54efa24…ea2784`, in `configs/serve.yaml`) |
 | `models/detector_s42_best.pt` | Kaggle `notebook2ac59126bb` v8 output (SHA-256 in `results/phase7_detect/README.md`) |
 
 **Without Docker** (good for development):

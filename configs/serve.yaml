@@ -6,7 +6,7 @@ classifier:
   # Phase 5 winner (ConvNeXt-Tiny, seed 44, epoch 4). Downloaded from Kaggle
   # notebook34061d5c16 v2: outputs/runs/20261104-110146_p5_convnext_tiny_s44/best.pt
   file: classifier_convnext_tiny_s44.pt
-  sha256: null                 # filled in once the file is in hand; provenance below is always checked
+  sha256: f54efa2468c56c29208295db1df5c79d7eef878965fefea045c2dbcc09ea2784   # 111.36 MB, downloaded 2026-11-06
   # The app refuses a checkpoint whose provenance differs from the one the
   # threshold was tuned for (source: results/phase3_p5_convnext_tiny_s44/threshold.json).
   expect:
