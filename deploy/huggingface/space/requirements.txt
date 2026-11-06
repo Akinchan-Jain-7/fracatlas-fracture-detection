@@ -1,8 +1,8 @@
-# Installed when the Space builds. CPU-only PyTorch: the Space has no GPU, and the
-# default wheels would add ~2.5 GB of CUDA.
---extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.6.0+cpu
-torchvision==0.21.0+cpu
+# Installed when the Space builds. Free Gradio Spaces run on ZeroGPU hardware, which
+# only accepts certain PyTorch versions (2.8.0 to 2.13.0 at the time of writing).
+# The app does not request a GPU, so inference runs on the CPU.
+torch==2.8.0
+torchvision==0.23.0
 # The project's dependencies (timm, numpy, pandas, pillow, pyyaml, matplotlib, fastapi,
 # uvicorn, ...), installed from the GitHub repo. app.py loads the code itself fresh
 # at every start, so this only needs re-running when dependencies change.
