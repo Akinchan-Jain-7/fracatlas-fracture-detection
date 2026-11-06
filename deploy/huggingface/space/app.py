@@ -16,9 +16,10 @@ New Python dependencies go in requirements.txt here (that needs a rebuild).
 from __future__ import annotations
 
 # Free Gradio Spaces run on ZeroGPU hardware, which stops any app that does not
-# declare at least one @spaces.GPU function at start-up. Importing `spaces` first
-# (before torch) and declaring one satisfies that check. The app itself runs its
-# models on the CPU, exactly as tested locally, and never calls this function.
+# report at least one @spaces.GPU function at start-up. Importing `spaces` first
+# (before torch), declaring one, and reporting it (report_zerogpu_ready below)
+# satisfies that check. The app itself runs its models on the CPU, exactly as
+# tested locally, and never calls this function.
 try:
     import spaces
 except ImportError:  # running somewhere other than a ZeroGPU Space
@@ -51,6 +52,21 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(
 log = logging.getLogger("space")
 
 
+def report_zerogpu_ready() -> None:
+    """Send ZeroGPU its start-up report.
+
+    `spaces` normally sends it when a Gradio app calls launch(). This Space serves
+    FastAPI instead, so nothing calls launch(); run the same start-up step here.
+    """
+    if spaces is None:
+        return
+    zero = importlib.import_module("spaces.zero")
+    startup = getattr(zero, "startup", None)  # defined only on ZeroGPU hardware
+    if startup is not None:
+        startup()
+        log.info("ZeroGPU start-up report sent")
+
+
 def fetch_code() -> Path:
     """The GitHub branch as a folder (a tarball, so no git is needed)."""
     url = f"https://github.com/{CODE_REPO}/archive/refs/heads/{CODE_REF}.tar.gz"
@@ -76,6 +92,7 @@ def fetch_models() -> Path:
 
 
 def main() -> None:
+    report_zerogpu_ready()
     code = fetch_code()
     models = fetch_models()
     # Use the downloaded code's own package (src/fracdet), so code and config match.
