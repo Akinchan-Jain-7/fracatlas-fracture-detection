@@ -4,12 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fracdet"
-version = "0.1.0"
-description = "Bone fracture detection from musculoskeletal X-rays (FracAtlas)"
+version = "1.0.0"
+description = "Bone fracture detection from musculoskeletal X-rays (FracAtlas): classifier, Grad-CAM, detector and web app"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [{ name = "Akinchan Jain" }]
+keywords = ["fracture detection", "medical imaging", "x-ray", "pytorch", "grad-cam", "faster r-cnn", "fastapi"]
 # Single source of truth for dependencies. Lower bounds only: Kaggle/Colab ship
 # their own CUDA builds of torch, and pinning exact versions here would make pip
 # try to replace them with a multi-GB download.
@@ -26,6 +27,11 @@ dependencies = [
     "tqdm>=4.66",
     "matplotlib>=3.7",
 ]
+
+[project.urls]
+Repository = "https://github.com/Akinchan-Jain-7/fracatlas-fracture-detection"
+Demo = "https://huggingface.co/spaces/akinchanJain7/fracture-check"
+Models = "https://huggingface.co/akinchanJain7/fracture-detection-model"
 
 [project.optional-dependencies]
 dev = ["pytest>=7.4", "ruff>=0.5", "httpx>=0.27"]

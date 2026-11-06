@@ -28,6 +28,7 @@ from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+import fracdet
 from fracdet.serve.pipeline import (
     BadImageError,
     FracturePipeline,
@@ -63,7 +64,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="FracAtlas fracture screening", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="Fracture Check", version=fracdet.__version__, lifespan=lifespan)
 
 
 def _pipeline(request: Request) -> FracturePipeline:
