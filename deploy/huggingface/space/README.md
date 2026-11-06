@@ -9,7 +9,7 @@ pinned: false
 license: mit
 short_description: Screen hand, arm, leg and hip X-rays for possible fractures
 models:
-  - akinchanJain7/fracture-check-models
+  - akinchanJain7/fracture-detection-model
 ---
 
 # Fracture Check
@@ -23,7 +23,7 @@ explains how to read the result and includes a general fracture care guide.
 decide whether to seek care; a doctor must read every X-ray.
 
 - Code, methods and every result: [github.com/Akinchan-Jain-7/fracatlas-fracture-detection](https://github.com/Akinchan-Jain-7/fracatlas-fracture-detection)
-- Models and model card: [akinchanJain7/fracture-check-models](https://huggingface.co/akinchanJain7/fracture-check-models)
+- Models and model card: [akinchanJain7/fracture-detection-model](https://huggingface.co/akinchanJain7/fracture-detection-model)
 
 Test-set results (589 X-rays, 102 fractured, scored once): the classifier caught
 94 of 102 fractures and cleared 71% of fracture-free X-rays; the detector's top

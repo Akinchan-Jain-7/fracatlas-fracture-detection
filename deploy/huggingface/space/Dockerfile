@@ -11,7 +11,7 @@ FROM python:3.11-slim
 
 ARG CODE_REPO=Akinchan-Jain-7/fracatlas-fracture-detection
 ARG CODE_REF=main
-ARG MODEL_REPO=akinchanJain7/fracture-check-models
+ARG MODEL_REPO=akinchanJain7/fracture-detection-model
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \

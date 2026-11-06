@@ -141,10 +141,10 @@ shows a scanning animation while it waits. Uploads are capped at 15 MB, JPEG or 
 
 ```
 GitHub repo (code)  ──tarball of main──►  Space akinchanJain7/fracture-check  ──► public app
-HF model repo akinchanJain7/fracture-check-models  ──two .pt files──┘
+HF model repo akinchanJain7/fracture-detection-model  ──two .pt files──┘
 ```
 
-- **Model repo** `akinchanJain7/fracture-check-models` (public): the two `.pt`
+- **Model repo** `akinchanJain7/fracture-detection-model` (public): the two `.pt`
   files plus a model card (`deploy/huggingface/models/README.md`).
 - **Space** `akinchanJain7/fracture-check` (Docker, CPU basic, free): holds only
   `deploy/huggingface/space/README.md` (Space settings and page) and
