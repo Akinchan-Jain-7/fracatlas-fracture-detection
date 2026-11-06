@@ -99,7 +99,7 @@ Values are mean ± sd over seeds, and Δ is the mean paired difference from the 
    evaluation before replacing the baseline (it did). No hyperparameters were
    tuned per backbone.
 
-**Next:** Phase 6, explainability (Grad-CAM) on the new model. It checks
+**Next:** [Phase 6](phase-6-explainability.md), explainability (Grad-CAM) on the new model. It checks
 whether ConvNeXt looks at the fracture, especially on the leg misses and the
 false alarms on hands.
 
@@ -176,3 +176,8 @@ and a single confirming test evaluation for any winner.
 To keep the comparison equal-budget and avoid tuning on validation for each
 model, which would favour whoever got the most tuning. The downside is
 stated: a model that needs a different LR could look worse than it is.
+
+---
+
+<!-- nav -->
+← [Phase 4: Class imbalance](phase-4-imbalance.md) · [Project README](../README.md) · [Phase 6: Explainability (Grad-CAM)](phase-6-explainability.md) →

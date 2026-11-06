@@ -228,3 +228,8 @@ k = 20, each fold is 5%, so 70/15/15 = 14/3/3 folds exactly.
 Always answering "no fracture" scores 82.4% while missing every fracture. We
 care most about missed fractures (false negatives), so Phase 3 centres on
 recall/sensitivity, precision, PR-AUC and a threshold tuned on validation.
+
+---
+
+<!-- nav -->
+← [Phase 0: Project setup](phase-0-setup.md) · [Project README](../README.md) · [Phase 2: Baseline model](phase-2-baseline.md) →

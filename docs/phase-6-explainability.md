@@ -127,6 +127,8 @@ plan was committed in `0e52ac7` before the run.
 
 ![Pointing game, validation, with the random-weight baselines](figures/phase-6/val_pointing_game.png)
 
+![Pointing game, test](figures/phase-6/test_pointing_game.png)
+
 - **Far above every baseline.** About 1 peak in 5 lands exactly in the box.
   The boxes cover only about 1% of the image, so chance is 1 in 100, and the
   "look at the centre" guess gets 1 in 13. The lower end of the test
@@ -207,8 +209,11 @@ are leads to test, not findings.
 - **Phase 7 (localization)** is worth doing. Grad-CAM points at the right
   area well above chance, but not precisely enough to *mark* a fracture.
   The boxes exist, and the finer layer already hits more often.
+  ([Done](phase-7-localization.md): a trained detector's top box hits 0.745.)
 - **Phase 8 (app)** should show the heatmap as "where the model looked",
   not "where the fracture is", and should warn when hardware is present.
+  ([Done](phase-8-app.md): the app labels it "Where the model looked", and its
+  "Reading the result" section warns that plates and screws mislead both models.)
 
 The full tables, including per-region rates, are in
 `results/phase6_explain/{val,test}/report.md`.
@@ -255,3 +260,8 @@ It is a strict test: one pixel, no margin, at a 32 px resolution. Small
 fractures (a box of a few dozen pixels) are hard to hit even when the model
 looks at the right bone. That is why the chance and centre baselines are
 reported per image, and energy share is reported next to it.
+
+---
+
+<!-- nav -->
+← [Phase 5: Model comparison (resolution and backbone)](phase-5-models.md) · [Project README](../README.md) · [Phase 7: Localisation (fracture boxes)](phase-7-localization.md) →

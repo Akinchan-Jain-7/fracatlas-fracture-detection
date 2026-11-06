@@ -203,3 +203,8 @@ CPU tests can't catch device-placement bugs. I made the post-training step
 recoverable from saved files (no retraining needed), added a regression test,
 and the reload now re-checks that the saved checkpoint reproduces its logged
 score.
+
+---
+
+<!-- nav -->
+← [Phase 1: Data understanding and a leakage-safe split](phase-1-data.md) · [Project README](../README.md) · [Phase 3: Proper evaluation](phase-3-evaluation.md) →

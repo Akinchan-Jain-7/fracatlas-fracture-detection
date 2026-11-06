@@ -243,3 +243,8 @@ confirmation. Fixing seed 42 in advance avoids both.
 A flip keeps every box an exact box. Rotating a box makes it a larger, looser
 box, which teaches sloppy outlines. A random crop can cut a fracture in half
 while its label stays. FracAtlas is small, so I kept augmentation simple and safe.
+
+---
+
+<!-- nav -->
+← [Phase 6: Explainability (Grad-CAM)](phase-6-explainability.md) · [Project README](../README.md) · [Phase 8: The web app (Fracture Check) and Docker](phase-8-app.md) →

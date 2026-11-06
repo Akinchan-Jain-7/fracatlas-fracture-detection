@@ -167,3 +167,8 @@ passes tests. Without it, "works on my Kaggle session" is the only evidence.
 `pip install -e .` would otherwise pull the default CUDA wheel (~2.5 GB) onto a
 runner with no GPU. Pre-installing the CPU wheel satisfies `torch>=2.1`, so pip
 skips it.
+
+---
+
+<!-- nav -->
+[Project README](../README.md) · [Phase 1: Data understanding and a leakage-safe split](phase-1-data.md) →

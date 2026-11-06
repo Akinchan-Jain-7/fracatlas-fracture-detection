@@ -226,3 +226,8 @@ land below. The interval shows whether the gap is within noise.
 Almost every image with surgical hardware is fractured, so "metal → fracture"
 is a shortcut. If performance holds up without those images, the model is
 finding fractures, not metal.
+
+---
+
+<!-- nav -->
+← [Phase 2: Baseline model](phase-2-baseline.md) · [Project README](../README.md) · [Phase 4: Class imbalance](phase-4-imbalance.md) →

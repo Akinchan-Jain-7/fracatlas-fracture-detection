@@ -83,7 +83,16 @@ X-ray. Emergency numbers are listed for India, the EU, the UK and the US.
 
 ## 4. Running it
 
-**Model files.** Put both in `models/` at the repo root (git ignores `*.pt`):
+**Model files.** Put both in `models/` at the repo root (git ignores `*.pt`). The
+quickest way is the public model repo on Hugging Face:
+
+```bash
+pip install huggingface_hub
+hf download akinchanJain7/fracture-detection-model \
+    classifier_convnext_tiny_s44.pt detector_s42_best.pt --local-dir models
+```
+
+They are the same files the training runs wrote:
 
 | File | Where from |
 |---|---|
@@ -218,3 +227,8 @@ It is general information from NHS and Mayo Clinic pages, the same for every
 user, with sources linked, and it says it doesn't replace the treating doctor.
 The page also says clearly, in several places, that the app is not a diagnosis
 and not a medical device.
+
+---
+
+<!-- nav -->
+← [Phase 7: Localisation (fracture boxes)](phase-7-localization.md) · [Project README](../README.md)

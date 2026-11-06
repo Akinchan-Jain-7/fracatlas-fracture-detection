@@ -160,3 +160,8 @@ on validation; the test set is used once, for the chosen model.
 **Q: Why the median seed and not the best one?**
 The best of three is partly luck, so its score would overstate what the method
 delivers. The median is a fair representative of the method.
+
+---
+
+<!-- nav -->
+← [Phase 3: Proper evaluation](phase-3-evaluation.md) · [Project README](../README.md) · [Phase 5: Model comparison (resolution and backbone)](phase-5-models.md) →
