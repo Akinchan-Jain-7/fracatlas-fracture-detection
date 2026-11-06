@@ -28,7 +28,9 @@ WORKDIR /app
 #    the web page later does not invalidate this (slow) layer.
 COPY --chown=app pyproject.toml README.md ./
 COPY --chown=app src ./src
-RUN pip install -e ".[serve]"
+# Generous timeout and retries: on a slow connection a single stalled download
+# (scipy is 35 MB) would otherwise fail the whole build after 15 s.
+RUN pip install --timeout 120 --retries 10 -e ".[serve]"
 
 # 4. The app itself and its settings. Results, data, notebooks, tests: not needed.
 COPY --chown=app configs/serve.yaml ./configs/serve.yaml
