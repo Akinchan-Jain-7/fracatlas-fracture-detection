@@ -8,3 +8,5 @@ torchvision==0.23.0
 # at every start, so this only needs re-running when dependencies change.
 fracdet[serve] @ https://github.com/Akinchan-Jain-7/fracatlas-fracture-detection/archive/refs/heads/main.tar.gz
 huggingface_hub>=1.16
+# ZeroGPU's helper package (app.py declares one GPU function for its start-up check)
+spaces

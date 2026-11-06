@@ -15,6 +15,22 @@ New Python dependencies go in requirements.txt here (that needs a rebuild).
 
 from __future__ import annotations
 
+# Free Gradio Spaces run on ZeroGPU hardware, which stops any app that does not
+# declare at least one @spaces.GPU function at start-up. Importing `spaces` first
+# (before torch) and declaring one satisfies that check. The app itself runs its
+# models on the CPU, exactly as tested locally, and never calls this function.
+try:
+    import spaces
+except ImportError:  # running somewhere other than a ZeroGPU Space
+    spaces = None
+
+if spaces is not None:
+
+    @spaces.GPU
+    def zerogpu_declaration() -> None:
+        """Declared for ZeroGPU's start-up check; never called."""
+
+
 import importlib.util
 import io
 import logging
