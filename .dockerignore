@@ -1,0 +1,30 @@
+# Only pyproject.toml, README.md, src/, configs/serve.yaml and app/ are copied into
+# the image (see Dockerfile). Excluding the rest keeps the build context small:
+# without this, Docker would first upload the dataset and model files to the builder.
+.git
+.github
+.venv
+venv
+data
+outputs
+runs
+checkpoints
+models
+results
+docs
+notebooks
+splits
+tests
+scripts
+**/__pycache__
+**/*.pyc
+**/*.pt
+**/*.pth
+**/*.zip
+.pytest_cache
+.ruff_cache
+.ipynb_checkpoints
+.vscode
+.idea
+.env
+kaggle.json

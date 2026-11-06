@@ -23,7 +23,7 @@ jobs:
         run: pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 
       - name: Install package
-        run: pip install -e ".[dev]"
+        run: pip install -e ".[dev,serve]"
 
       - name: Lint
         run: |
@@ -32,3 +32,31 @@ jobs:
 
       - name: Test
         run: pytest
+
+  # Phase 8: the Docker image builds and the server starts. The real model files are
+  # not in git, so the container runs without them: /api/health must then report them
+  # missing (503) while the page itself still loads.
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build image
+        run: docker build -t fracture-check .
+
+      - name: Start container without models
+        run: docker run -d --name app -p 8000:7860 fracture-check
+
+      - name: Smoke test
+        run: |
+          for i in $(seq 1 30); do curl -s -o /dev/null localhost:8000/ && break; sleep 2; done
+          docker logs app
+          test "$(curl -s -o /dev/null -w '%{http_code}' localhost:8000/)" = 200
+          test "$(curl -s -o /dev/null -w '%{http_code}' localhost:8000/static/app.js)" = 200
+          code=$(curl -s -o health.json -w '%{http_code}' localhost:8000/api/health)
+          cat health.json; echo
+          test "$code" = 503
+          grep -q "model file not found" health.json
+          docker exec app whoami | grep -qx app
+          docker image ls fracture-check

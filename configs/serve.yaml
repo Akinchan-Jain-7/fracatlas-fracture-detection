@@ -1,0 +1,55 @@
+# Phase 8: what the app loads and how it decides. Every number here comes from a
+# committed result; tests/test_serve.py checks each one against its source file,
+# so this file cannot silently drift from the evaluated models.
+
+classifier:
+  # Phase 5 winner (ConvNeXt-Tiny, seed 44, epoch 4). Downloaded from Kaggle
+  # notebook34061d5c16 v2: outputs/runs/20261104-110146_p5_convnext_tiny_s44/best.pt
+  file: classifier_convnext_tiny_s44.pt
+  sha256: null                 # filled in once the file is in hand; provenance below is always checked
+  # The app refuses a checkpoint whose provenance differs from the one the
+  # threshold was tuned for (source: results/phase3_p5_convnext_tiny_s44/threshold.json).
+  expect:
+    epoch: 4
+    trained_commit: 1f7d7c802ed3ed6419f72ed90431fa94942f24e5
+    split_csv_md5: 99cbcb06a8e71d67f5215fda47fad124
+  threshold: 0.096791435       # pre-registered in Phase 5 (90% recall on validation)
+  gradcam_layer: -1            # last stage, as in Phase 6
+
+detector:
+  # Phase 7 reported model (Faster R-CNN v2, seed 42, epoch 5).
+  file: detector_s42_best.pt
+  sha256: 4a87100d08b1c998c5599016755271dfbda661d8b38bbee3494aef2863ab24c3
+  expect:
+    epoch: 5
+    seed: 42
+    trained_commit: 8b672437c9d17e470a3fe2e6ed6081767cd1c802
+    split_csv_md5: 99cbcb06a8e71d67f5215fda47fad124
+  # On a flagged X-ray the top box is always shown. Further boxes are shown when
+  # they score at least this much: the cut-off at which normal VALIDATION X-rays
+  # get at most 0.1 boxes each (scripts/choose_box_cutoff.py --budget 0.1).
+  extra_box_min_score: 0.7310
+  extra_box_budget: 0.1
+  max_boxes: 4
+
+limits:
+  max_upload_mb: 15
+  accepted_types: [image/jpeg, image/png]
+  heatmap_max_side: 384        # the heatmap PNG sent to the browser (it is 12 x 12 underneath)
+
+# Shown in the app's "About the model" section. Test-set results, scored once.
+model_card:
+  test_images: 589
+  test_fractured: 102
+  classifier:              # results/phase3_p5_convnext_tiny_s44/test_metrics.json
+    recall: 0.9216
+    specificity: 0.7084
+    precision: 0.3983
+    npv: 0.9773
+    roc_auc: 0.9373
+    pr_auc: 0.8534
+  detector:                # results/phase7_detect/test/summary.json
+    top1_pointing: 0.7451
+    ap50_all: 0.4206
+    sens_at_1_fp: 0.6351
+    hardware_top1_pointing: [4, 11]

@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fracture Check</title>
+  <meta name="description" content="Upload a hand, arm, leg, hip or shoulder X-ray: a model trained on FracAtlas estimates whether it shows a fracture, where it looked, and where the break most likely is.">
+  <link rel="preload" href="/static/fonts/barlow-condensed-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%2324323f'/%3E%3Ctext x='16' y='24' font-family='Arial' font-weight='700' font-size='22' text-anchor='middle' fill='%23e8f0f3'%3ER%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <div class="room">
+    <header class="bar">
+      <a class="brand" href="/" aria-label="Fracture Check, home">
+        <span class="marker" aria-hidden="true">R</span>
+        <span class="brand-name">Fracture Check</span>
+      </a>
+      <nav aria-label="Sections">
+        <a href="#reading">Reading the result</a>
+        <a href="#care">Care guide</a>
+        <a href="#about">About the model</a>
+      </nav>
+    </header>
+
+    <main id="main" class="stage" data-state="empty">
+      <section class="intro" aria-labelledby="headline">
+        <div class="intro-text">
+          <h1 id="headline">Check an X‑ray for a broken bone</h1>
+          <p class="lede">Upload an X-ray of a hand, arm, leg, hip or shoulder. A model trained on
+            X-rays from the public FracAtlas dataset estimates whether it shows a fracture, shows where
+            it looked, and marks where the break most likely is.</p>
+          <p class="caution">A student research project. It is not a diagnosis; a doctor must read every X-ray.</p>
+        </div>
+
+        <div class="result" id="result" hidden aria-live="polite">
+          <p class="verdict" id="verdict"></p>
+          <div class="scale" id="scale" role="img">
+            <div class="scale-track">
+              <div class="scale-fill" id="scale-fill"></div>
+              <div class="scale-flag" id="scale-flag"><span>flag line</span></div>
+              <div class="scale-mark" id="scale-mark"></div>
+            </div>
+            <div class="scale-ends"><span>0%</span><span>100%</span></div>
+          </div>
+          <p class="score"><span id="score-num"></span> fracture score</p>
+          <div class="meaning" id="meaning"></div>
+          <div class="result-actions">
+            <a class="btn btn-quiet" href="#care" id="to-care">Read the fracture care guide</a>
+            <button class="btn btn-quiet" type="button" id="again">Check another X-ray</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="viewer" aria-label="X-ray viewer">
+        <div class="lightbox" id="lightbox">
+          <span class="clip clip-left" aria-hidden="true"></span>
+          <span class="clip clip-right" aria-hidden="true"></span>
+
+          <label class="drop" id="drop" for="file">
+            <svg class="drop-icon" viewBox="0 0 48 48" aria-hidden="true"><path d="M14 30c-4 0-7-3-7-7 0-3.6 2.6-6.5 6-7 1.2-4.6 5.4-8 10.3-8 5.2 0 9.5 3.8 10.4 8.8 3.6.4 6.3 3.4 6.3 7.1 0 4-3.2 7.1-7 7.1" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M24 40V22m0 0-6 6m6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="drop-title">Drop an X‑ray here</span>
+            <span class="drop-or">or</span>
+            <span class="btn btn-solid">Choose an image</span>
+            <span class="drop-hint" id="drop-hint">JPEG or PNG, up to 15 MB. You can also paste an image.</span>
+          </label>
+          <input id="file" type="file" accept="image/jpeg,image/png" class="visually-hidden">
+
+          <figure class="film" id="film" hidden>
+            <div class="film-frame" id="film-frame">
+              <img id="xray" alt="The uploaded X-ray">
+              <img id="heat" class="layer" alt="" aria-hidden="true">
+              <svg id="boxes" class="layer" viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true"></svg>
+              <div class="sweep" aria-hidden="true"></div>
+            </div>
+            <figcaption id="film-caption" class="visually-hidden">Analysing the X-ray</figcaption>
+          </figure>
+
+          <div class="problem" id="problem" hidden role="alert">
+            <p id="problem-text"></p>
+            <button class="btn btn-solid" type="button" id="problem-retry">Choose another image</button>
+          </div>
+        </div>
+
+        <div class="layers" id="layers" hidden>
+          <fieldset>
+            <legend class="visually-hidden">Show on the X-ray</legend>
+            <label class="toggle"><input type="checkbox" id="show-heat" checked> <span class="swatch swatch-heat"></span> Where the model looked</label>
+            <label class="toggle" id="toggle-boxes"><input type="checkbox" id="show-boxes" checked> <span class="swatch swatch-box"></span> Likely fracture location</label>
+          </fieldset>
+          <label class="opacity">Heatmap strength
+            <input type="range" id="heat-opacity" min="0" max="100" value="85">
+          </label>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="plaster">
+    <section class="reading" id="reading" aria-labelledby="reading-title">
+      <h2 id="reading-title">Reading the result</h2>
+      <div class="explain">
+        <article>
+          <h3><span class="key key-score" aria-hidden="true"></span>The fracture score</h3>
+          <p>How strongly the classifier thinks the X-ray shows a fracture, from 0 to 100%. Any score
+            above the flag line (<span data-info="threshold-pct">9.7%</span>) is flagged. The line is set low on
+            purpose, so the model catches about 9 in 10 fractures; the price is more false alarms.</p>
+        </article>
+        <article>
+          <h3><span class="key key-heat" aria-hidden="true"></span>Where the model looked</h3>
+          <p>The coloured glow is a Grad-CAM heatmap: the parts of the image that pushed the score up.
+            It is coarse, built on a 12 by 12 grid, so it shows the area the model used rather than the
+            fracture line itself. In testing its brightest point sat right on the fracture in about 1 in 5 X-rays.</p>
+        </article>
+        <article>
+          <h3><span class="key key-box" aria-hidden="true"></span>Likely fracture location</h3>
+          <p>A second model, trained on boxes that radiologists drew around fractures, marks where the break
+            most likely is. Boxes are only shown when the X-ray is flagged. In testing its top box landed on
+            the fracture in <span data-info="top1">75 of every 100</span> fractured X-rays. A solid box scored at least
+            <span data-info="cutoff">0.73</span>; a dashed box is the best guess with lower confidence.</p>
+        </article>
+      </div>
+      <div class="limits">
+        <h3>Where it is less reliable</h3>
+        <ul>
+          <li><strong>Plates, screws and other implants.</strong> The models often treat metal as a sign of
+            fracture, and the box tends to land on the implant: only <span data-info="hw">4 of 11</span> such fractures were boxed correctly.</li>
+          <li><strong>Children's X-rays.</strong> Growth plates near the ends of long bones can look like a
+            fracture line and cause false alarms.</li>
+          <li><strong>Anything that isn't a plain X-ray of a limb or hip.</strong> CT or MRI scans, spine and skull
+            images, and photos of a screen were not part of training.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="care" id="care" aria-labelledby="care-title">
+      <div class="care-head">
+        <h2 id="care-title">Fracture care guide</h2>
+        <p>General guidance on what to do for a suspected or confirmed broken bone, summarised from NHS and
+          Mayo Clinic pages. It does not replace advice from the doctor treating you.</p>
+      </div>
+
+      <div class="regions" role="radiogroup" aria-label="Body part" id="regions"></div>
+
+      <div class="emergency" id="emergency">
+        <h3>Get emergency help now if</h3>
+        <p class="emergency-note" id="emergency-note" hidden></p>
+        <ul id="care-emergency"></ul>
+        <p class="numbers">Call your local emergency number: <span id="numbers"></span>.</p>
+      </div>
+
+      <div class="care-grid">
+        <article class="care-block">
+          <h3>Before you see a doctor</h3>
+          <ol id="care-first"></ol>
+        </article>
+        <article class="care-block">
+          <h3>How fractures are treated</h3>
+          <ul id="care-treat"></ul>
+        </article>
+        <article class="care-block care-wide">
+          <h3>Healing and recovery</h3>
+          <p id="care-heal"></p>
+          <div class="dodont">
+            <div>
+              <h4>Do</h4>
+              <ul class="ticks" id="care-dos"></ul>
+            </div>
+            <div>
+              <h4>Don't</h4>
+              <ul class="crosses" id="care-donts"></ul>
+            </div>
+          </div>
+        </article>
+        <article class="care-block care-alert">
+          <h3>Call your fracture clinic or doctor if, during recovery</h3>
+          <ul id="care-warn"></ul>
+        </article>
+      </div>
+      <p class="sources">Sources: <span id="care-sources"></span></p>
+    </section>
+
+    <section class="about" id="about" aria-labelledby="about-title">
+      <h2 id="about-title">About the model</h2>
+      <p class="about-lede">Two models work together. A ConvNeXt-Tiny classifier decides whether the X-ray
+        shows a fracture; a Faster R-CNN detector marks where. Both were trained on FracAtlas (4,083
+        musculoskeletal X-rays, 719 of them fractured), split so that near-identical images and image series
+        never sit on both sides of the training and test sets. The numbers below come from the held-out test set, scored once.</p>
+      <dl class="stats" id="stats"></dl>
+      <p class="about-foot">Built by Akinchan Jain, B.Tech CSE (AI), Bennett University.
+        <a href="https://github.com/Akinchan-Jain-7/fracatlas-fracture-detection">Code, methods and every result on GitHub</a>.</p>
+    </section>
+  </div>
+
+  <footer class="foot">
+    <p>Fracture Check is a research demonstration and not a medical device. Do not use it to decide whether
+      to seek care. Images are processed in memory to produce the result and are not stored.</p>
+  </footer>
+
+  <script type="module" src="/static/app.js"></script>
+</body>
+</html>
