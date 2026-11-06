@@ -14,6 +14,14 @@ set scored once.
 **Try it:** [Fracture Check on Hugging Face](https://huggingface.co/spaces/akinchanJain7/fracture-check)
 (upload an X-ray; the free Space may take a minute to wake up).
 
+![Fracture Check on a FracAtlas X-ray: an 84% fracture score above the 9.7% flag line, the Grad-CAM heatmap, and the detector's box on the upper arm](docs/figures/phase-8/app_result.jpg)
+
+*The live app on a FracAtlas X-ray (CC BY 4.0). The score is checked against a flag line
+fixed before testing; the heatmap shows where the classifier looked and the orange box
+is the detector's most likely fracture location. The two can disagree, as here: how often
+each lands on the radiologist's fracture box is measured in [Phase 6](docs/phase-6-explainability.md)
+and [Phase 7](docs/phase-7-localization.md).*
+
 **Not a medical device. For education and research only.**
 
 ## Results
